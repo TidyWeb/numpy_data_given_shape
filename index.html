@@ -1,12 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-GB">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
 <meta name="description" content="A guide to NumPy: boxes within boxes, sheets in a book, what a shape actually tells you, and what happens when you lay two arrays over each other.">
 <title>NumPy Guide — Boxes, Sheets and Addresses</title>
 <style>
   :root {
+    color-scheme: light only;
     --ink:#151d28; --paper:#f4f1e8; --panel:#fffefa; --muted:#5d6674; --green:#1f3a5c;
     --mint:#dae3ee; --amber:#c88a42; --amber-soft:#dcae76; --coral:#b25a3e; --line:#cdc7b8;
     --rail:#122032; --code:#0f1b2a; --code-comment:#8fabc4;
@@ -58,6 +60,8 @@
   .figure .mini-label{display:block;margin-bottom:16px}
   .scroll-hint{display:none;font:700 .78rem/1.4 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.07em;color:var(--coral);margin:10px 0}
   table{width:100%;border-collapse:collapse;background:var(--panel);font-size:1.08rem}
+  .table-scroll{overflow-x:auto;margin:0 0 26px}
+  .table-scroll table{margin:0}
   th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:17px 16px;line-height:1.55}
   th{font-size:.8rem;color:var(--green)}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.94em;color:var(--green);font-weight:700}
@@ -86,7 +90,8 @@
   .modern .figure figcaption{color:#bcc7d4}
   .modern .warning,.modern .annotation{color:var(--ink)}
   .modern table{background:var(--panel);color:var(--ink)}
-  .modern .mono{color:var(--green)}
+  .modern .mono{color:var(--mint)}
+  .modern .card .mono,.modern .warning .mono,.modern .annotation .mono,.modern table .mono{color:var(--green)}
   .strength{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
   .strength>div{padding:26px;border-top:8px solid;background:var(--panel)}
   .strength .a{border-color:var(--coral)}.strength .b{border-color:var(--amber)}
@@ -112,6 +117,7 @@
     .step{grid-template-columns:52px 1fr;gap:14px}
     .step p{grid-column:1/-1}
     .strength{grid-template-columns:1fr}
+    .table-scroll table{min-width:780px}
     .scroll-hint{display:block}
     .quote{padding:30px}
     .hero-mark{display:none}
@@ -193,6 +199,7 @@
           .ara{stroke:#b25a3e;stroke-width:2;fill:none;marker-end:url(#pa)}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="250" fill="#fffefa"/>
 
       <text class="la" x="20" y="30">HOW YOU ALREADY READ AN ADDRESS</text>
       <rect class="bxa" x="20" y="46" width="200" height="46"/><text class="pa1" x="38" y="76">England</text>
@@ -282,6 +289,7 @@
           .ptr{stroke:#b25a3e;stroke-width:2;fill:none;marker-end:url(#p1)}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="400" fill="#fffefa"/>
 
       <text class="hd" x="20" y="28">THE LIST</text>
       <text class="ti" x="20" y="60">A row of notes saying where things are</text>
@@ -416,6 +424,7 @@ for value in values:
           .slot{fill:#f4f1e8;stroke:#c39a80;stroke-width:1}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="350" fill="#fffefa"/>
 
       <text class="hd2" x="20" y="28">A SINGLE ROW</text>
       <text class="sh" x="20" y="56">(6,)</text>
@@ -570,6 +579,7 @@ arr[0, :, 2]   <span class="c"># page 0, every row, column 2</span></code></pre>
           .hr{fill:#f3e0d7;stroke:#b25a3e;stroke-width:2.5}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="330" fill="#fffefa"/>
 
       <text class="ls" x="20" y="26" style="fill:#1f3a5c">COUNTING FROM THE FRONT &#8594;</text>
       <text class="ix" x="46" y="52">0</text><text class="ix" x="136" y="52">1</text><text class="ix" x="226" y="52">2</text>
@@ -662,6 +672,7 @@ arr[0, :, 2]   <span class="c"># page 0, every row, column 2</span></code></pre>
           .arw{stroke:#1f3a5c;stroke-width:2.5;fill:none;marker-end:url(#p3)}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="250" fill="#fffefa"/>
 
       <text class="lb" x="20" y="26">THE BOOK &#183; (3, 5, 4)</text>
       <rect class="src" x="20" y="40" width="200" height="180"/>
@@ -798,6 +809,7 @@ arr[arr &gt; 4]   <span class="c"># array([ 7, 19,  5])</span></code></pre>
           .ar4{stroke:#1f3a5c;stroke-width:2.5;fill:none;marker-end:url(#p4)}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="300" fill="#fffefa"/>
 
       <text class="lb4" x="20" y="26">TEMPERATURE ON FIVE DAYS</text>
       <rect class="bx" x="20" y="38" width="82" height="40"/><text class="vv" x="48" y="65">12</text>
@@ -870,30 +882,129 @@ arr[~(arr &gt; 4)]                <span class="c"># not</span></code></pre>
 </div></section>
 
 <section id="combining" class="modern"><div class="shell">
-  <div class="section-head"><div class="section-no">05 / COMBINING</div><div><h2>Two arrays, laid <em>over each other</em></h2><p class="lead">Everything so far has been about one array. Real work involves several. The syntax for combining them is about four characters long, which is exactly the problem &mdash; there is almost nothing on the page to tell you what NumPy has decided to do.</p></div></div>
+  <div class="section-head"><div class="section-no">05 / COMBINING</div><div><h2>Several arrays, <em>three different jobs</em></h2><p class="lead">Real work involves more than one array. But &ldquo;combine these&rdquo; can mean three completely different things. Before choosing a function, decide what you want the answer to look like.</p></div></div>
 
-  <p>Start with the easy case. Two arrays the same shape, added together.</p>
+  <div class="grid">
+    <div class="span-4"><div class="card">
+      <span class="label">Job 1 &middot; Calculate</span>
+      <h3>Make one answer from each pair</h3>
+      <p>Match the arrays by position and calculate: add, subtract, multiply, or compare. The matching values become one new value.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">Job 2 &middot; Arrange</span>
+      <h3>Keep every value</h3>
+      <p>Put arrays above, beside, or behind each other. Nothing is calculated away; the result becomes taller, wider, or gains another layer.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">Job 3 &middot; Choose</span>
+      <h3>Take one of two answers</h3>
+      <p>Use a True-or-False mask to decide which source supplies each position. Every position gets one answer.</p>
+    </div></div>
+  </div>
 
-<pre><code>a = np.array([[1, 2, 3],
+  <p style="margin-top:34px">Those jobs can all involve two arrays, but they do not do the same thing. We will take them one at a time, beginning with the simplest: two matching sheets and one calculation.</p>
+
+  <h3>Job 1: start with two matching sheets</h3>
+
+  <p>Two sheets, the same size, a number written in every square. Lay one on top of the other so that every square sits directly over its opposite number. So far this is just an overlay, and you might reasonably expect to still be able to read both sheets.</p>
+
+  <p>You can&rsquo;t. NumPy presses them together. It reads down through each pair of squares, adds the two numbers, and writes that single answer onto a <strong>third</strong> sheet. Every square on the new sheet holds the total of the two squares that were sitting in that position. But don&rsquo;t worry &mdash; those two squares are still there. NumPy doesn&rsquo;t destroy anything. It makes something new out of the two sheets while leaving both originals exactly as they were.</p>
+
+  <p>Three things follow from that, and they are worth having straight before you look at any code:</p>
+
+  <ul>
+    <li>The answer is <strong>the same size</strong> as the two sheets that went in. Six squares in, six squares in, six squares out.</li>
+    <li>The two original sheets are <strong>untouched</strong>. They still hold exactly what they held before. Nothing is consumed.</li>
+    <li>On the new sheet the two contributions are <strong>no longer separable</strong>. Once 1 and 5 have been pressed into 6, you cannot look at the 6 and work out where it came from. That information only survives in the originals.</li>
+  </ul>
+
+  <p>So there are three sheets on the table at the end: the two originals and the newly calculated answer.</p>
+
+  <h3>The same thing in code</h3>
+
+<pre><code><span class="c"># the first sheet: shape (2, 3)</span>
+a = np.array([[1, 2, 3],
               [4, 5, 6]])
 
-b = np.array([[10, 20, 30],
-              [40, 50, 60]])
+<span class="c"># the second sheet: the same shape</span>
+b = np.array([[5, 7, 2],
+              [9, 1, 6]])
 
-a + b     <span class="c"># array([[11, 22, 33],</span>
-          <span class="c">#        [44, 55, 66]])</span></code></pre>
+<span class="c"># press them together; the third sheet is kept under the name c</span>
+c = a + b
 
-  <p>Top-left meets top-left. Bottom-right meets bottom-right. Every arithmetic operator behaves this way and so does every comparison &mdash; <span class="mono">a &gt; b</span> hands you a mask of which cell beat which.</p>
+print(c)
+<span class="c"># [[ 6  9  5]</span>
+<span class="c">#  [13  6 12]]</span>
+
+print(c.shape)
+<span class="c"># (2, 3) — one answer for every original position</span></code></pre>
+
+  <p>Read it one square at a time. Take the position, look up what each sheet holds there, add them:</p>
+
+<pre><code>position       a holds    b holds    answer
+------------------------------------------
+top row, 1st      1          5          6
+top row, 2nd      2          7          9
+top row, 3rd      3          2          5
+
+bottom row, 1st   4          9         13
+bottom row, 2nd   5          1          6
+bottom row, 3rd   6          6         12</code></pre>
+
+  <p>That is the whole operation. There is no sorting and no matching by name. Position meets the same position, top-left to bottom-right.</p>
+
+  <p>And to prove the originals survive it, look at them again afterwards:</p>
+
+<pre><code>print(a)      <span class="c"># [[1 2 3]</span>
+              <span class="c">#  [4 5 6]]   unchanged</span>
+
+print(b)      <span class="c"># [[5 7 2]</span>
+              <span class="c">#  [9 1 6]]   unchanged</span></code></pre>
+
+  <p>Three sheets on the table, exactly as promised. And that <span class="mono">c =</span> matters. In a notebook, <span class="mono">a + b</span> on its own creates and displays the answer, but it does not give that answer a name you can use later. The two originals are fine either way; <span class="mono">c =</span> is what catches the new result and keeps it available.</p>
+
+  <p>So &ldquo;pressing&rdquo; is a slightly rough word for it. Nothing gets crushed. It works more like a photocopier: the two sheets go through, come out the other side exactly as they went in, and a new sheet appears in the tray.</p>
+
+  <div class="annotation">
+    <p><strong>One spelling does change an original, and it is easy to miss.</strong></p>
+    <p style="margin-top:10px"><span class="mono">c = a + b</span> leaves both originals alone and stores a separate answer.</p>
+    <p style="margin-top:10px"><span class="mono">a += b</span> calculates the same pairs but writes the answers back into <span class="mono">a</span>. To see that safely without changing the <span class="mono">a</span> used throughout this lesson, mutate a copy:</p>
+<pre style="margin:16px 0 0"><code>a_changed = a.copy()   <span class="c"># before: [[1, 2, 3], [4, 5, 6]]</span>
+a_changed += b          <span class="c"># the += operation writes into a_changed</span>
+
+print(a_changed)
+<span class="c"># [[ 6  9  5]</span>
+<span class="c">#  [13  6 12]] — after: the earlier values were replaced</span></code></pre>
+  </div>
+
+  <p>Ordinary element-by-element arithmetic works like <span class="mono">+</span> here, and comparisons do too. <span class="mono">a &gt; b</span> pairs the same positions and writes True or False into each one, producing a mask. Matrix multiplication, written with <span class="mono">@</span>, is a different operation and is not part of this lesson.</p>
 
   <div class="warning">
     <p><strong>NumPy pairs things up by position. It has no idea what anything is called.</strong></p>
-    <p>Join two DataFrames in pandas and the labels do the work &mdash; the row for Leeds finds the row for Leeds wherever it happens to be sitting. NumPy arrays have no labels at all. Row three meets row three because they are both row three. That is the entire matching logic.</p>
+    <p>NumPy arrays have no row labels. Row three meets row three because they are both row three. That is the entire matching logic.</p>
     <p>So if one array came out of a database sorted by date and the other out of a spreadsheet sorted alphabetically, NumPy will cheerfully pair them up anyway, hand you a result of exactly the right shape, and say nothing whatsoever. It will look perfect. <strong>This is the mistake that ends up in reports.</strong></p>
+    <p>Pandas can join tables through labels or named keys, which is safer when the two sources may be in different orders. You do not need to know pandas to understand the NumPy rule: NumPy trusts position because position is all it has.</p>
   </div>
 
   <h3>When the shapes don&rsquo;t match: broadcasting</h3>
 
-  <p>Arrays don&rsquo;t have to be the same shape. NumPy will stretch a smaller one across a bigger one if the shapes are compatible. You have done this already without noticing &mdash; <span class="mono">arr * 2</span> is one lonely number stretched across the whole array.</p>
+  <p>Job 1 began with two equal sheets, but NumPy can also reuse a smaller set of values across a larger array. That reuse is called <strong>broadcasting</strong>. You have already done its simplest version: <span class="mono">arr * 2</span> reuses one lonely number at every position.</p>
+
+  <p>The next step up is one row reused across a table. Here the table has three columns and the row has three values, so each row of the table can meet the same three values:</p>
+
+<pre><code>table = np.array([[1, 2, 3],
+                  [1, 2, 3],
+                  [1, 2, 3],
+                  [1, 2, 3]])       <span class="c"># shape (4, 3)</span>
+
+row = np.array([10, 20, 30])         <span class="c"># shape (3,)</span>
+
+table + row
+<span class="c"># [[11 22 33]</span>
+<span class="c">#  [11 22 33]</span>
+<span class="c">#  [11 22 33]</span>
+<span class="c">#  [11 22 33]]</span></code></pre>
 
   <p class="scroll-hint">Scroll sideways for the rule &rarr;</p>
   <figure class="figure wide">
@@ -902,20 +1013,21 @@ a + b     <span class="c"># array([[11, 22, 33],</span>
       <title id="bc-t">Broadcasting a row across a table</title>
       <desc id="bc-d">A three-value row combined with a four by three table. The row is reused for every row of the table. Shapes are lined up at the right-hand end before being compared.</desc>
       <defs>
-        <marker id="p5" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#dcae76"/></marker>
+        <marker id="p5" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#b25a3e"/></marker>
         <style>
-          .l5{font:700 15px ui-monospace,monospace;fill:#e8967a;letter-spacing:.08em}
-          .v5{font:700 15px ui-monospace,monospace;fill:#eef2f7}
-          .n5{font:16px Georgia,serif;fill:#bcc7d4}
-          .op{font:700 28px ui-monospace,monospace;fill:#dae3ee}
-          .sh5{font:700 21px ui-monospace,monospace;fill:#eef2f7}
-          .sg{font:700 21px ui-monospace,monospace;fill:#9fe3c0}
-          .c5{fill:#1b2b3d;stroke:#5f7a96;stroke-width:1.3}
-          .c5r{fill:#3a2b22;stroke:#dcae76;stroke-width:1.6}
-          .c5g{fill:#172b25;stroke:#7fc9a4;stroke-width:1.4}
-          .st{stroke:#dcae76;stroke-width:1.6;stroke-dasharray:5 4;fill:none;marker-end:url(#p5)}
+          .l5{font:700 15px ui-monospace,monospace;fill:#b25a3e;letter-spacing:.08em}
+          .v5{font:700 15px ui-monospace,monospace;fill:#151d28}
+          .n5{font:16px Georgia,serif;fill:#5d6674}
+          .op{font:700 28px ui-monospace,monospace;fill:#5d6674}
+          .sh5{font:700 21px ui-monospace,monospace;fill:#151d28}
+          .sg{font:700 21px ui-monospace,monospace;fill:#9a5f24}
+          .c5{fill:#fffefa;stroke:#9fb3c8;stroke-width:1.4}
+          .c5r{fill:#f3e0d7;stroke:#b25a3e;stroke-width:2}
+          .c5g{fill:#dae3ee;stroke:#1f3a5c;stroke-width:2}
+          .st{stroke:#b25a3e;stroke-width:1.6;stroke-dasharray:5 4;fill:none;marker-end:url(#p5)}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="300" fill="#fffefa"/>
 
       <text class="l5" x="20" y="26">THE TABLE &#183; (4, 3)</text>
       <rect class="c5" x="20" y="38" width="56" height="32"/><text class="v5" x="43" y="60">1</text>
@@ -961,34 +1073,58 @@ a + b     <span class="c"># array([[11, 22, 33],</span>
       <rect class="c5g" x="570" y="146" width="60" height="32"/><text class="v5" x="586" y="168">22</text>
       <rect class="c5g" x="634" y="146" width="60" height="32"/><text class="v5" x="650" y="168">33</text>
 
-      <line x1="748" y1="16" x2="748" y2="288" stroke="#3f4a58" stroke-width="1"/>
+      <line x1="748" y1="16" x2="748" y2="288" stroke="#cdc7b8" stroke-width="1"/>
 
-      <text class="l5" x="782" y="26">THE RULE &#183; LINE UP ON THE RIGHT</text>
+      <text class="l5" x="782" y="26">THE RULE &#183; LINE UP THE LAST NUMBER</text>
       <text class="sh5" x="782" y="76">(4, 3)</text>
       <text class="sh5" x="782" y="110">(&#160;&#160;&#160;&#160;3)</text>
-      <line x1="782" y1="122" x2="952" y2="122" stroke="#7fc9a4" stroke-width="2"/>
+      <line x1="782" y1="122" x2="952" y2="122" stroke="#9a5f24" stroke-width="2"/>
       <text class="sg" x="782" y="156">(4, 3)</text>
-      <text class="n5" x="782" y="196">Write both shapes down, lined</text>
-      <text class="n5" x="782" y="220">up at the right, never the left.</text>
-      <text class="n5" x="782" y="252">Then check each column. Both</text>
-      <text class="n5" x="782" y="276">equal, or one of them is a 1, or missing.</text>
+      <text class="n5" x="782" y="196">Longer shape on top. Shorter one</text>
+      <text class="n5" x="782" y="220">underneath, shunted right so its</text>
+      <text class="n5" x="782" y="252">last number lands under the last</text>
+      <text class="n5" x="782" y="276">number above. A gap counts as a 1.</text>
     </svg>
-    <figcaption>Line the two shapes up at the right-hand end and walk the columns. Each pair must be equal, or contain a 1, or be missing because one array has fewer dimensions &mdash; a missing one counts as a 1. If every pair passes, the result takes the bigger number from each. If any pair fails all three tests, it can&rsquo;t be done and you get an error.</figcaption>
+    <figcaption>Write the longer shape first, then shunt the shorter one right until its last number sits under the last number above &mdash; the way you line up the units column when adding on paper. Now read down each column. Each pair must be equal, or contain a 1, or be a gap, and a gap counts as a 1. If every pair passes, the result takes the bigger number from each column. If any pair fails all three tests, it can&rsquo;t be done and you get an error.</figcaption>
   </figure>
 
-<pre><code><span class="c"># works</span>
-(4, 3)     with  (3,)      <span class="c">-&gt; (4, 3)     row stretched down</span>
-(4, 3)     with  (4, 1)    <span class="c">-&gt; (4, 3)     column stretched across</span>
-(2, 3, 4)  with  (3, 4)    <span class="c">-&gt; (2, 3, 4)  one sheet used on every page</span>
-(4, 1)     with  (1, 3)    <span class="c">-&gt; (4, 3)     both stretch; a grid appears</span>
+<p>A shape is written with a comma between each direction. <strong>(4, 3)</strong> means four rows and three columns. <strong>(3,)</strong> has only one direction &mdash; three values in a flat row &mdash; and that lonely comma is there purely so Python doesn&rsquo;t read the brackets as ordinary maths brackets.</p>
 
-<span class="c"># doesn't work</span>
-(4, 3)     with  (4,)      <span class="c">-&gt; error: 3 and 4 are neither equal nor 1</span>
-(4, 3)     with  (2, 3)    <span class="c">-&gt; error: 4 and 2 are neither equal nor 1</span></code></pre>
+  <p>To check whether two shapes will work together, write the longer one down first. Then write the shorter one underneath, shunted along so its last number sits directly under the last number above it &mdash; the same way you line up the units column when you add numbers on paper. Any gap left open on the left counts as a 1. Then read down each column.</p>
+
+<pre><code>  4  3     the table
+     3     the flat row of three
+  ------
+  4  3     works
+
+<span class="c">right column:  3 and 3 are equal &mdash; fine</span>
+<span class="c">left column:   4 and nothing &mdash; nothing counts as a 1, and a 1 stretches</span></code></pre>
+
+  <p>Stretching is only a picture for what NumPy lets you imagine. The same row is read once for every row of the table; NumPy does not need to build four physical copies of it.</p>
+
+  <p>Same check, this time with a column of four:</p>
+
+<pre><code>  4  1     a column of four
+  4  3     the table
+  ------
+  4  3     works
+
+<span class="c">right column:  1 and 3 &mdash; the 1 stretches out to 3</span>
+<span class="c">left column:   4 and 4 are equal &mdash; fine</span></code></pre>
+
+  <p>And one that fails:</p>
+
+<pre><code>  2  3     a two-row table
+  4  3     the four-row table
+  ------
+  error
+
+<span class="c">right column:  3 and 3 are equal &mdash; fine</span>
+<span class="c">left column:   2 and 4 &mdash; not equal, and neither one is a 1</span></code></pre>
 
   <h3>The one that catches everybody</h3>
 
-  <p>Look at the two failures. Adding a row of three to a four-by-three table works fine. Adding a <em>column</em> of four to the same table fails &mdash; even though four is precisely how many rows it has. That feels wrong, and here is why it isn&rsquo;t.</p>
+  <p>Adding a flat row of three to a four-by-three table works fine. Adding a flat run of <em>four</em> to the same table fails &mdash; even though four is precisely how many rows it has. That feels wrong, and here is why it isn&rsquo;t.</p>
 
   <figure class="figure">
     <span class="mini-label">Figure 08 &middot; Why a flat run of four fails, and how to fix it</span>
@@ -1004,6 +1140,7 @@ a + b     <span class="c"># array([[11, 22, 33],</span>
           .good{fill:#142b23;stroke:#7fc9a4;stroke-width:2.5}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="220" fill="#fffefa"/>
 
       <rect class="bad" x="20" y="20" width="480" height="180"/>
       <text class="h6" x="48" y="58" style="fill:#e8967a">FAILS</text>
@@ -1031,70 +1168,114 @@ a + b     <span class="c"># array([[11, 22, 33],</span>
 
 <pre><code>col = np.array([10, 20, 30, 40])   <span class="c"># shape (4,)</span>
 
-col.reshape(4, 1)                  <span class="c"># (4, 1) — spelt out</span>
-col.reshape(-1, 1)                 <span class="c"># (4, 1) — same, without counting</span>
-col[:, np.newaxis]                 <span class="c"># (4, 1) — the usual way people write it</span>
+col.reshape(4, 1).shape             <span class="c"># (4, 1) — spelt out</span>
+col.reshape(-1, 1).shape            <span class="c"># (4, 1) — same, without counting</span>
+col[:, np.newaxis].shape            <span class="c"># (4, 1) — another common spelling</span>
 
-table + col.reshape(-1, 1)         <span class="c"># works now</span></code></pre>
+table + col.reshape(-1, 1)
+<span class="c"># [[11 12 13]</span>
+<span class="c">#  [21 22 23]</span>
+<span class="c">#  [31 32 33]</span>
+<span class="c">#  [41 42 43]]</span></code></pre>
 
   <p><span class="mono">np.newaxis</span> is just the word <span class="mono">None</span> wearing a name badge. Put it in the brackets and it inserts an empty dimension at that spot. <span class="mono">col[:, np.newaxis]</span> reads as: keep everything in the first direction, then add a second direction with one slot in it.</p>
 
   <div class="annotation">
     <p><strong>Reading the error.</strong> <span class="mono">ValueError: operands could not be broadcast together with shapes (4,3) (4,)</span></p>
-    <p style="margin-top:10px">&ldquo;Operands&rdquo; means the two things either side of the plus sign, listed in the order you wrote them. Line the shapes up on the right and find the column that fails. That is the whole diagnosis, and it takes about four seconds once you know to do it. Whenever a broadcast fails, print both shapes before you do anything else &mdash; it is either a real mismatch in your data or a flat <span class="mono">(n,)</span> that wanted to be <span class="mono">(n, 1)</span>, and only you can tell which.</p>
+    <p style="margin-top:10px">&ldquo;Operands&rdquo; means the two things either side of the plus sign, listed in the order you wrote them. Line the shapes up on the right and find the column that fails. Whenever a broadcast fails, print both shapes before you do anything else. It may be a real mismatch in your data, or it may be a flat <span class="mono">(n,)</span> that was intended to be an explicit column <span class="mono">(n, 1)</span>. Only you know what the data was meant to represent.</p>
   </div>
 
-  <h3>Picking between two arrays with <span class="mono" style="color:#dae3ee">np.where</span></h3>
+  <h3>Job 2: keep every value and arrange the arrays together</h3>
 
-  <p>A mask tells you which positions pass. <span class="mono">np.where</span> uses a mask to take a value from one place where it&rsquo;s True and another place where it&rsquo;s False. It is an if/else applied to everything at once &mdash; and unlike masking, it keeps the shape. Nothing is dropped; every slot gets filled from one side or the other.</p>
+  <p>This time no pair is added, compared, or replaced. Every original value survives. Your question is about the shape of the container: should the arrays become rows, columns, one longer run, or separate pages?</p>
+
+  <p>The arrays go inside a list because each function receives one sequence of arrays. That is why you see square brackets inside round ones.</p>
+
+  <p class="scroll-hint">Scroll sideways to compare all three columns &rarr;</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th style="width:30%">Call</th><th style="width:36%">What it builds</th><th>What the inputs need</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">np.vstack([a, b])</td><td>Rows above and below each other.</td><td>Flat arrays of equal length, or tables with the same number of columns.</td></tr>
+      <tr><td class="mono">np.column_stack([a, b])</td><td>Each flat array becomes a column.</td><td>The same number of values, so the columns have the same height.</td></tr>
+      <tr><td class="mono">np.hstack([a, b])</td><td>For flat arrays: one longer flat run. For tables: side by side.</td><td>Flat arrays may differ in length. Tables need the same number of rows.</td></tr>
+      <tr><td class="mono">np.stack([a, b])</td><td>A new outer layer: two sheets become a two-page book.</td><td>Exactly the same shape throughout.</td></tr>
+    </tbody>
+  </table></div>
+
+<pre><code>costs  = np.array([12, 18, 9, 25])
+prices = np.array([20, 30, 15, 40])
+
+np.vstack([costs, prices])
+<span class="c"># [[12 18  9 25]</span>
+<span class="c">#  [20 30 15 40]]                 shape (2, 4)</span>
+
+np.column_stack([costs, prices])
+<span class="c"># [[12 20]</span>
+<span class="c">#  [18 30]</span>
+<span class="c">#  [ 9 15]</span>
+<span class="c">#  [25 40]]                       shape (4, 2)</span>
+
+np.hstack([costs, prices])
+<span class="c"># [12 18  9 25 20 30 15 40]     shape (8,)</span></code></pre>
+
+  <p>The first two functions use the same eight values but arrange them differently. <span class="mono">vstack</span> makes two rows; <span class="mono">column_stack</span> makes two columns. <span class="mono">hstack</span> does not invent columns for flat arrays &mdash; it simply joins the two runs end to end.</p>
+
+<pre><code>book = np.stack([a, b])
+
+print(book)
+<span class="c"># [[[1 2 3]</span>
+<span class="c">#   [4 5 6]]</span>
+<span class="c">#</span>
+<span class="c">#  [[5 7 2]</span>
+<span class="c">#   [9 1 6]]]</span>
+
+print(book.shape)
+<span class="c"># (2, 2, 3) — 2 pages, 2 rows, 3 columns</span></code></pre>
+
+  <p>Compare that with <span class="mono">c = a + b</span>. Addition produced one 2&times;3 answer sheet. <span class="mono">stack</span> produced a 2&times;2&times;3 book and kept both sheets separately readable. The answer&rsquo;s shape tells you which job happened.</p>
+
+  <div class="warning">
+    <p><strong>Arranging arrays together is where the positional risk gets baked in.</strong> The second you place two sources into matching rows or columns, you have declared that their positions belong together. Nothing has verified that.</p>
+    <p>If the sources could be in different orders, establish a known order first or join them through checked labels in pandas. From then on, every calculation rests on that alignment.</p>
+  </div>
+
+  <h3>Job 3: choose one of two answers with <span class="mono" style="color:#dae3ee">np.where</span></h3>
+
+  <p>A mask says which positions pass. <span class="mono">np.where</span> uses that mask to take the True-side answer at passing positions and the False-side answer everywhere else. Nothing is dropped: every position is filled from one side or the other.</p>
 
 <pre><code>np.where(condition, use_this_if_true, use_this_if_false)
 
 sales = np.array([340, 890, 1120, 410, 700])
 
-np.where(sales &gt; 500, "good", "poor")
-<span class="c"># array(['poor', 'good', 'good', 'poor', 'good'])</span>
+labels = np.where(sales &gt; 500, "good", "poor")
+print(labels)
+<span class="c"># ['poor' 'good' 'good' 'poor' 'good']</span>
 
-np.where(sales &gt; 500, sales * 1.1, sales)
-<span class="c"># bump up the good days, leave the rest alone</span></code></pre>
+adjusted_sales = np.where(sales &gt; 500, sales * 1.1, sales)
+print(adjusted_sales)
+<span class="c"># [ 340.  979. 1232.  410.  770.]</span>
+
+print(sales)
+<span class="c"># [ 340  890 1120  410  700] — the original is unchanged</span></code></pre>
 
   <div class="grid">
     <div class="span-6"><div class="card">
       <span class="label">Masking</span>
-      <h3><span class="mono">arr[mask]</span> throws away</h3>
-      <p>The failures are dropped. You get back something smaller, usually a single row. Use it when you only want the ones that qualified.</p>
+      <h3><span class="mono">arr[mask]</span> keeps only</h3>
+      <p>The failures are dropped, so the result usually becomes smaller. Use it when you want only the values that qualified.</p>
     </div></div>
     <div class="span-6"><div class="card">
       <span class="label">Where</span>
-      <h3><span class="mono">np.where(mask, a, b)</span> swaps out</h3>
-      <p>The failures get replaced. You get back the same shape you started with. Use it to label, cap, or patch things in place.</p>
+      <h3><span class="mono">np.where(mask, a, b)</span> fills every slot</h3>
+      <p>Every position receives a True-side or False-side answer. With same-shaped inputs, the result keeps that shape. It returns a new array; it does not patch an original in place.</p>
     </div></div>
   </div>
 
-  <h3>Getting several arrays into one place</h3>
-
-  <p>None of the above is any use until you have arrays to combine. Three functions cover nearly everything. Note the arrays go inside a list &mdash; each function takes one argument that happens to be a sequence, hence square brackets inside the round ones.</p>
-
-  <table>
-    <thead><tr><th style="width:32%">Call</th><th style="width:34%">What it does</th><th>What it needs</th></tr></thead>
-    <tbody>
-      <tr><td class="mono">np.vstack([a, b])</td><td>Stacks them as rows. The table gets taller.</td><td>The same number of columns.</td></tr>
-      <tr><td class="mono">np.hstack([a, b])</td><td>Puts them side by side. The table gets wider.</td><td>The same number of rows.</td></tr>
-      <tr><td class="mono">np.column_stack([a, b])</td><td>Turns each flat array into a column.</td><td>Nothing &mdash; it handles the reshaping for you.</td></tr>
-      <tr><td class="mono">np.concatenate([a, b], axis=0)</td><td>Joins along whichever direction you name.</td><td>A match everywhere except the direction being joined.</td></tr>
-    </tbody>
-  </table>
-
-<pre><code>costs  = np.array([12, 18, 9, 25])
-prices = np.array([20, 30, 15, 40])
-
-np.vstack([costs, prices])            <span class="c"># (2, 4) — two rows</span>
-np.column_stack([costs, prices])      <span class="c"># (4, 2) — two columns</span></code></pre>
-
-  <div class="warning">
-    <p><strong>Stacking is the moment the risk gets baked in.</strong> The second you stack two arrays together you have declared that their positions line up. Nothing has verified that. From then on, every calculation you do rests on it.</p>
-    <p>If the two sources could possibly be in different orders, sort them into a known order first, or do the join in pandas where the labels can be checked. It is ten minutes now against a wrong number in a report later.</p>
+  <div class="annotation">
+    <p><strong>One useful arranging function is deliberately waiting.</strong> <span class="mono">concatenate</span> joins arrays along a direction that already exists, but NumPy asks you to name that direction as an <em>axis</em>. The next section explains what an axis is before asking you to use one.</p>
   </div>
+
+  <p>That is the map: calculate matching positions, arrange every value, or choose one answer per position. Broadcasting belongs to calculation and choosing because it controls how positions can meet. Stacking belongs to arranging because it changes the container without calculating the values away.</p>
 </div></section>
 
 <section id="axis"><div class="shell">
@@ -1132,15 +1313,24 @@ np.column_stack([costs, prices])      <span class="c"># (4, 2) — two columns</
 
   <p style="margin-top:34px">So &ldquo;axis&rdquo; is just a numbered name for a layer. Axis 0 is always the outermost one. The last axis is always the innermost run of values. On an ordinary flat sheet, shape <span class="mono">(3, 4)</span>, there are only two: axis 0 is the rows and axis 1 is the columns. Same as reading the shape left to right, which you have been doing since section 02.</p>
 
+  <h3>The arranging function we held back</h3>
+
+  <p>Now <span class="mono">concatenate</span> can say which existing layer should grow. With the two 2&times;3 sheets from Section 05, joining along axis 0 grows the rows; joining along axis 1 grows the columns:</p>
+
+<pre><code>np.concatenate([a, b], axis=0).shape   <span class="c"># (4, 3) — rows grow</span>
+np.concatenate([a, b], axis=1).shape   <span class="c"># (2, 6) — columns grow</span></code></pre>
+
+  <p>The word <span class="mono">axis</span> still means the same numbered layer in both calls. What happens to that layer depends on the function: <span class="mono">concatenate</span> makes it longer, while totals and averages squash it down.</p>
+
   <div class="annotation">
-    <p><strong>Why it matters at all:</strong> when you total something up, NumPy needs to know which layer to do the totalling through. Add up the whole thing? Add up each column separately? Each row? Each page? You answer that by naming a layer &mdash; and naming a layer means giving its number.</p>
+    <p><strong>Why it matters at all:</strong> NumPy needs to know which layer an operation should work through. Join more rows or more columns? Add up each column separately? Each row? Each page? You answer by naming a layer &mdash; and naming a layer means giving its number.</p>
   </div>
 
-  <h3>Now the actual rule</h3>
+  <h3>The rule for totals, averages, and other reductions</h3>
 
-  <p>Here it is, and it is mechanical enough that you never have to think about it again:</p>
+  <p>When an operation reduces many values to a smaller summary, the shape rule is mechanical:</p>
 
-  <div class="quote">The axis you name is the one that disappears.<small>Find its number in the shape, delete it, and what&rsquo;s left is your answer&rsquo;s shape</small></div>
+  <div class="quote">For a reduction, the axis you name is the one that disappears.<small>Find its number in the shape, delete it, and what&rsquo;s left is your answer&rsquo;s shape</small></div>
 
   <p style="margin-top:40px">A <span class="mono">(3, 4)</span> array summed along axis 0: delete the 3, you&rsquo;re left with <span class="mono">(4,)</span> &mdash; four numbers, one per column. Summed along axis 1: delete the 4, you&rsquo;re left with <span class="mono">(3,)</span> &mdash; three numbers, one per row. That&rsquo;s it. It works the same at any number of layers.</p>
 
@@ -1165,6 +1355,7 @@ np.column_stack([costs, prices])      <span class="c"># (4, 2) — two columns</
           .a7{stroke:#b25a3e;stroke-width:2;fill:none;marker-end:url(#p7)}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="320" fill="#fffefa"/>
 
       <text class="lg7" x="20" y="26">THE SHEET &#183; (3, 4)</text>
       <rect class="b7" x="20" y="38" width="58" height="32"/><text class="v7" x="44" y="60">1</text>
@@ -1290,6 +1481,7 @@ readings - row_means.reshape(-1, 1) <span class="c"># works</span></code></pre>
           .dotg{fill:#1f3a5c;stroke:#fffefa;stroke-width:2}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="270" fill="#fffefa"/>
 
       <text class="l8" x="20" y="26" style="fill:#b25a3e">AS THEY COME &#183; ORDINARY SCALE</text>
       <line class="ax8" x1="20" y1="100" x2="1000" y2="100"/>
@@ -1298,8 +1490,9 @@ readings - row_means.reshape(-1, 1) <span class="c"># works</span></code></pre>
       <circle class="dotr" cx="30" cy="100" r="9"/>
       <circle class="dotr" cx="118" cy="100" r="9"/>
       <circle class="dotr" cx="1000" cy="100" r="9"/>
+      <line class="tick" x1="118" y1="72" x2="118" y2="92"/>
+      <text class="v8" x="104" y="64">1,000</text>
       <text class="v8" x="14" y="132">1 &#183; 10 &#183; 100</text>
-      <text class="v8" x="100" y="132">1,000</text>
       <text class="v8" x="940" y="132">10,000</text>
       <text class="n8" x="20" y="166">Four of the five are piled up against the left edge, effectively on top of each other.</text>
       <text class="n8" x="20" y="190">One big value has flattened everything else into a smudge.</text>
@@ -1371,6 +1564,7 @@ readings - row_means.reshape(-1, 1) <span class="c"># works</span></code></pre>
           .ax9{stroke:#5d6674;stroke-width:1.5}
         </style>
       </defs>
+      <rect x="0" y="0" width="1120" height="250" fill="#fffefa"/>
 
       <text class="l9" x="20" y="26" style="fill:#c88a42">np.random.rand</text>
       <text class="t9" x="20" y="56">Uniform &mdash; flat as a pancake</text>
@@ -1547,17 +1741,19 @@ arr[1]        vs  arr[1:2]      <span class="c"># a number drops a layer, a slic
 arr[arr &gt; 4]                    <span class="c"># mask: keeps what passed, comes back flat</span>
 arr[(arr &gt; 4) &amp; (arr &lt;= 17)]    <span class="c"># every comparison needs its own brackets</span>
 other[arr &gt; 4]                  <span class="c"># mask from one array, values from another</span>
-np.where(arr &gt; 4, a, b)         <span class="c"># swaps instead of dropping; shape survives</span></code></pre>
+np.where(arr &gt; 4, a, b)         <span class="c"># fills every slot; returns a new array</span></code></pre>
 
-  <h3>Putting arrays together</h3>
+  <h3>Working with more than one array</h3>
   <table>
     <thead><tr><th style="width:36%">Call</th><th>What it does</th></tr></thead>
     <tbody>
       <tr><td class="mono">a + b, a * b, a &gt; b</td><td>Value by value, matched <strong>by position only</strong>. There are no labels.</td></tr>
-      <tr><td class="mono">np.vstack([a, b])</td><td>Stack as rows. Needs the same number of columns.</td></tr>
-      <tr><td class="mono">np.hstack([a, b])</td><td>Side by side. Needs the same number of rows.</td></tr>
-      <tr><td class="mono">np.column_stack([a, b])</td><td>Two flat arrays become two columns. No reshaping needed.</td></tr>
-      <tr><td class="mono">np.concatenate([a, b], axis=0)</td><td>Join along a direction you name.</td></tr>
+      <tr><td class="mono">np.where(mask, a, b)</td><td>Choose the True-side or False-side answer at every position; returns a new array.</td></tr>
+      <tr><td class="mono">np.vstack([a, b])</td><td>Stack as rows. Flat arrays need equal length; tables need the same columns.</td></tr>
+      <tr><td class="mono">np.column_stack([a, b])</td><td>Flat arrays become columns. They need the same number of values.</td></tr>
+      <tr><td class="mono">np.hstack([a, b])</td><td>Flat arrays become one longer run; tables go side by side and need the same rows.</td></tr>
+      <tr><td class="mono">np.stack([a, b])</td><td>Keep equal-shaped arrays separate inside one new outer layer.</td></tr>
+      <tr><td class="mono">np.concatenate([a, b], axis=0)</td><td>Join along an existing axis; all other dimensions must match.</td></tr>
     </tbody>
   </table>
 
@@ -1571,10 +1767,10 @@ np.where(arr &gt; 4, a, b)         <span class="c"># swaps instead of dropping; 
       <p style="margin-top:12px">A flat <span class="mono">(n,)</span> counts as a row. If you meant a column, make it <span class="mono">(n, 1)</span>.</p>
     </div></div>
     <div class="span-6"><div class="card">
-      <span class="label">Axis check</span>
+      <span class="label">Reduction axis check</span>
       <h3>Cross it out and look</h3>
       <p>An axis is a <strong>layer</strong>, numbered from the outside in. Axis 0 is the outermost. The last axis is the run of values.</p>
-      <p style="margin-top:12px">The one you name is the one that <strong>disappears</strong>. Cross its number out of the shape and read off what&rsquo;s left. Add <span class="mono">keepdims=True</span> to leave a 1 there instead.</p>
+      <p style="margin-top:12px">For a total or average, the one you name <strong>disappears</strong>. Cross its number out of the shape and read off what&rsquo;s left. Add <span class="mono">keepdims=True</span> to leave a 1 there instead.</p>
     </div></div>
   </div>
 
@@ -1592,7 +1788,7 @@ np.nansum(arr)   np.nanmean(arr)   np.isnan(arr)</code></pre>
   <table>
     <thead><tr><th style="width:22%">Keyword</th><th>What it controls</th></tr></thead>
     <tbody>
-      <tr><td class="mono">axis=</td><td>Which layer to work through, and therefore which one vanishes.</td></tr>
+      <tr><td class="mono">axis=</td><td>Which layer the function works along. A reduction removes it; concatenation makes it longer.</td></tr>
       <tr><td class="mono">shape=</td><td>How to build it, as a tuple.</td></tr>
       <tr><td class="mono">size=</td><td>How much to make. A number or a tuple. Not a type.</td></tr>
       <tr><td class="mono">dtype=</td><td>Forces a type instead of letting NumPy pick.</td></tr>
