@@ -1,0 +1,1637 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A guide to NumPy: boxes within boxes, sheets in a book, what a shape actually tells you, and what happens when you lay two arrays over each other.">
+<title>NumPy Guide — Boxes, Sheets and Addresses</title>
+<style>
+  :root {
+    --ink:#151d28; --paper:#f4f1e8; --panel:#fffefa; --muted:#5d6674; --green:#1f3a5c;
+    --mint:#dae3ee; --amber:#c88a42; --amber-soft:#dcae76; --coral:#b25a3e; --line:#cdc7b8;
+    --rail:#122032; --code:#0f1b2a; --code-comment:#8fabc4;
+    --shadow:0 20px 55px rgba(21,29,40,.12);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);background:var(--paper);font:17px/1.65 Georgia,'Times New Roman',serif}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.28;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E")}
+  a{color:var(--green);text-underline-offset:3px}
+  .shell{width:min(1400px,calc(100% - 56px));margin:auto;position:relative}
+  header{min-height:auto;display:grid;align-items:center;padding:34px 0 60px;border-bottom:1px solid var(--line);overflow:hidden}
+  .eyebrow,.label,nav,th,.mini-label{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:uppercase;letter-spacing:.09em}
+  .eyebrow{color:var(--coral);font-size:.86rem;font-weight:700}
+  h1{font-size:clamp(3.2rem,8.6vw,8rem);line-height:.86;letter-spacing:-.075em;max-width:1000px;margin:20px 0 34px;font-weight:500}
+  h1 em{color:var(--green);font-weight:400;font-style:normal}
+  .dek{max-width:820px;font-size:clamp(1.2rem,2.1vw,1.6rem);line-height:1.45}
+  .hero-note{margin-top:38px;max-width:900px;border-left:5px solid var(--amber);padding:12px 0 12px 22px;color:var(--muted)}
+  .hero-mark{position:absolute;right:250px;top:-30px;font:17rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--mint);z-index:-1;transform:rotate(9deg);letter-spacing:-.06em}
+  nav{position:sticky;top:0;z-index:10;background:rgba(244,241,232,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  nav .shell{display:flex;gap:22px;overflow-x:auto;padding-block:14px;scrollbar-width:none}
+  nav a{white-space:nowrap;text-decoration:none;font-size:.8rem;font-weight:700}
+  main section{padding:90px 0;border-bottom:1px solid var(--line)}
+  .section-head{display:grid;grid-template-columns:180px 1fr;gap:28px;margin-bottom:48px}
+  .section-no{font:700 .88rem/1 ui-monospace,monospace;color:var(--coral);letter-spacing:.08em}
+  h2{font-size:clamp(2.1rem,4.6vw,4.1rem);line-height:1.02;letter-spacing:-.045em;margin:0;font-weight:500}
+  h2 em{color:var(--green);font-weight:400;font-style:normal}
+  h3{font-size:1.5rem;line-height:1.25;margin:0 0 12px}
+  p{margin:0 0 1em}
+  .lead{font-size:1.3rem;max-width:830px}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+  .span-3{grid-column:span 3}.span-4{grid-column:span 4}.span-5{grid-column:span 5}
+  .span-6{grid-column:span 6}.span-7{grid-column:span 7}.span-8{grid-column:span 8}.span-12{grid-column:1/-1}
+  .card{background:var(--panel);border:1px solid var(--line);padding:28px;box-shadow:0 8px 0 rgba(31,58,92,.06)}
+  .card p{font-size:1.06rem;line-height:1.6}
+  .card p:last-child,.card ul:last-child{margin-bottom:0}
+  .label,.mini-label{color:var(--coral);font-size:.78rem;font-weight:700}
+  .term{color:var(--green);font-weight:700}
+  .quote{background:var(--green);color:#f6f2e9;padding:48px;margin:60px auto 0;max-width:960px;font-size:clamp(1.45rem,3vw,2.35rem);line-height:1.25;box-shadow:var(--shadow)}
+  .quote small{display:block;margin-top:22px;font:.8rem/1.5 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--mint)}
+  .warning{border-left:6px solid var(--coral);background:#f3e0d7;padding:28px;margin:34px 0}
+  .warning p:last-child{margin-bottom:0}
+  .annotation{border-left:5px solid var(--amber);background:#efe6d6;padding:24px 28px;margin:28px 0}
+  .annotation p:last-child{margin-bottom:0}
+  .figure{margin:38px 0;background:var(--panel);border:1px solid var(--line);padding:28px;overflow-x:auto}
+  .figure svg{display:block;width:100%;height:auto}
+  .figure.wide svg{min-width:900px}
+  .figure figcaption{margin-top:20px;color:var(--muted);font-size:1.08rem;line-height:1.6;max-width:920px}
+  .figure .mini-label{display:block;margin-bottom:16px}
+  .scroll-hint{display:none;font:700 .78rem/1.4 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.07em;color:var(--coral);margin:10px 0}
+  table{width:100%;border-collapse:collapse;background:var(--panel);font-size:1.08rem}
+  th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:17px 16px;line-height:1.55}
+  th{font-size:.8rem;color:var(--green)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.94em;color:var(--green);font-weight:700}
+  pre{margin:0 0 26px;padding:24px;background:var(--code);color:#eef2f7;overflow-x:auto;font:16px/1.8 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  pre .c{color:var(--code-comment)}
+  pre .k{color:var(--amber-soft)}
+  .code-pair{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:30px 0}
+  .code-pair > div{border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+  .code-pair .cap{padding:18px 22px 14px;border-bottom:1px solid var(--line)}
+  .code-pair .cap strong{display:block;font-size:1.18rem;margin-top:4px}
+  .code-pair pre{margin:0;flex:1;font-size:14.5px}
+  .cycle{counter-reset:step;display:grid;gap:12px}
+  .step{counter-increment:step;display:grid;grid-template-columns:70px 250px 1fr;gap:22px;align-items:start;padding:26px;border-top:1px solid var(--line);background:linear-gradient(90deg,rgba(255,254,250,.9),transparent)}
+  .step::before{content:counter(step,decimal-leading-zero);font:700 1.9rem/1 ui-monospace,monospace;color:var(--coral)}
+  .step h3{font-size:1.22rem}
+  .step p{margin:0;font-size:1.08rem}
+  .step strong{color:var(--green)}
+  .modern{background:var(--ink);color:#eef2f7}
+  .modern h2{color:#fbfaf6}.modern .section-no,.modern .label,.modern .mini-label{color:#e8967a}
+  .modern .lead{color:#c9d2dd}
+  .modern h2 em{color:var(--mint)}
+  .modern h3{color:#fbfaf6}
+  .modern .card{background:var(--panel);color:var(--ink);border-color:#4c5665}
+  .modern .card h3{color:var(--green)}
+  .modern .figure{background:#101a26;border-color:#3f4a58}
+  .modern .figure figcaption{color:#bcc7d4}
+  .modern .warning,.modern .annotation{color:var(--ink)}
+  .modern table{background:var(--panel);color:var(--ink)}
+  .modern .mono{color:var(--green)}
+  .strength{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+  .strength>div{padding:26px;border-top:8px solid;background:var(--panel)}
+  .strength .a{border-color:var(--coral)}.strength .b{border-color:var(--amber)}
+  .strength .c{border-color:var(--green)}.strength .d{border-color:#6f8fa6}
+  .strength h3{font-size:1.18rem}
+  .strength p{margin:0;font-size:1.04rem;line-height:1.55}
+  .history{background:var(--mint);border:1px solid var(--line);border-top:8px solid var(--green);padding:32px 34px;margin:38px 0}
+  .history .label{display:block;margin-bottom:10px}
+  .history h3{margin-bottom:14px}
+  .history p:last-child{margin-bottom:0}
+  .brand-top,.tidy{display:inline-flex;flex-direction:column;align-items:center;gap:9px;text-decoration:none;color:var(--muted);font:700 1.02rem/1.1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.11em;text-transform:uppercase}
+  .brand-top{margin-bottom:30px}
+  .brand-top:hover,.tidy:hover{color:var(--green)}
+  .brand-top img,.tidy img{width:84px;height:84px;object-fit:contain;display:block}
+  footer{padding:60px 0 90px;color:var(--muted)}
+  .footer-grid{display:grid;grid-template-columns:auto 1fr;gap:34px;align-items:center}
+  @media (max-width:700px){.footer-grid{grid-template-columns:1fr;justify-items:start}}
+  @media (max-width:900px){
+    .section-head{grid-template-columns:1fr;gap:10px}
+    .grid{grid-template-columns:1fr}
+    [class*="span-"]{grid-column:auto}
+    .code-pair{grid-template-columns:1fr}
+    .step{grid-template-columns:52px 1fr;gap:14px}
+    .step p{grid-column:1/-1}
+    .strength{grid-template-columns:1fr}
+    .scroll-hint{display:block}
+    .quote{padding:30px}
+    .hero-mark{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="shell">
+    <div class="hero-mark" aria-hidden="true">[&nbsp;]</div>
+    <a class="brand-top" href="https://github.com/TidyWeb/" target="_blank" rel="noopener"><img src="assets/tidyweb_logo.png" alt="TidyWeb logo" width="84" height="84"><span>TidyWeb</span></a>
+    <div class="eyebrow">NumPy Guide &middot; boxes, sheets and addresses</div>
+    <h1>Data,<br>Given<br><em>Shape</em></h1>
+    <p class="dek">You already have data and you already have Python. What NumPy adds is a shape to put the data in &mdash; so you can do maths to the whole thing at once instead of picking at it one item at a time.</p>
+    <p class="hero-note"><strong>The question you will keep asking:</strong> what shape is this thing, and what shape is the thing I&rsquo;m about to combine it with? Nearly every NumPy error &mdash; and every silent NumPy mistake &mdash; is one of those two answers not being what you assumed.</p>
+  </div>
+</header>
+
+<nav aria-label="Document sections"><div class="shell">
+  <a href="#start">Start here</a><a href="#array">Not a list</a><a href="#shape">Shape</a><a href="#reaching">Reaching in</a><a href="#condition">Filtering</a><a href="#combining">Combining</a><a href="#axis">Axis</a><a href="#maths">The maths</a><a href="#sheet">Cheat sheet</a>
+</div></nav>
+
+<main>
+
+<section id="start"><div class="shell">
+  <div class="section-head"><div class="section-no">00 / START HERE</div><div><h2>What NumPy is <em>actually for</em></h2><p class="lead">Most courses drop you straight into the commands without ever saying why the thing exists. So before anything else: here is the job NumPy does, and why you would want it done.</p></div></div>
+
+  <p>You can already hold data in Python. Lists, dictionaries, lists of dictionaries &mdash; you have been doing it for a while now and it works. But look at what you actually do with it. You loop. You reach in, pull one item out, test it, do a sum on it, put the answer somewhere, go back for the next one. Every question you ask of the data becomes a small machine you have to build by hand, and the more numbers there are the more that starts to hurt.</p>
+
+  <p>That is fine for twenty records. It is miserable for twenty thousand, and the code that does it is long, fiddly and full of places for a mistake to hide.</p>
+
+  <p><strong>What NumPy does is take that pile and give it a shape.</strong> It turns loose, messy, real-world numbers into one structured object &mdash; a thing with known dimensions that Python can work on <em>as a whole</em> rather than one item at a time. Once the data has a shape, you stop writing machines. You state what you want and NumPy does it to everything at once.</p>
+
+  <div class="annotation">
+    <p><strong>Think of it as a pre-digester.</strong> Raw data arrives lumpy and awkward. NumPy breaks it down into something regular enough that Python can absorb it without chewing through a thousand lines of code first. Everything downstream &mdash; pandas, charting, statistics, machine learning &mdash; is standing on this. A pandas DataFrame is NumPy arrays underneath with names written on the side.</p>
+  </div>
+
+  <p>That is the whole pitch. Messy reality in, one tidy structured object out, and maths you can do to all of it in a single line. The rest of this guide is about what that shape is, how to read it, and what happens when you put two of them together.</p>
+
+  <h3>Now: boxes inside boxes</h3>
+
+  <p>To make sense of the shape, three pictures. These are the ones everything else hangs off, and if you have them straight then NumPy stops looking like a pile of strange punctuation.</p>
+
+  <div class="grid">
+    <div class="span-4"><div class="card">
+      <span class="label">Picture one</span>
+      <h3>A box</h3>
+      <p>A variable is a box with a label on it. Put something in, read it back out. That is the whole idea and it does not get more complicated.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">Picture two</span>
+      <h3>Boxes inside boxes</h3>
+      <p>A box can hold other boxes. Those can hold others again. This is how Python builds anything complicated &mdash; not with new ideas, just with more layers of the same one.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">Picture three</span>
+      <h3>An address</h3>
+      <p>To reach something buried three layers down you write its address, one layer at a time. Each set of brackets is one more line of the address.</p>
+    </div></div>
+  </div>
+
+  <p style="margin-top:34px">That third one is worth dwelling on, because it is the bit that looks frightening and isn&rsquo;t. Writing <span class="mono">arr[2][1][3]</span> is not a magic incantation. It is a postal address, read the way you&rsquo;d read one aloud:</p>
+
+  <figure class="figure">
+    <span class="mini-label">Figure 01 &middot; Brackets are an address, narrowing as you go</span>
+    <svg viewBox="0 0 1120 250" role="img" aria-labelledby="ad-t ad-d">
+      <title id="ad-t">Each bracket narrows the address by one level</title>
+      <desc id="ad-d">A postal address narrows from country to city to street to house number. An array index narrows from outer group to sheet to row to column in exactly the same way.</desc>
+      <defs>
+        <marker id="pa" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#b25a3e"/></marker>
+        <style>
+          .la{font:700 15px ui-monospace,monospace;fill:#b25a3e;letter-spacing:.08em}
+          .pa1{font:19px Georgia,serif;fill:#151d28}
+          .cda{font:700 21px ui-monospace,monospace;fill:#1f3a5c}
+          .na{font:16px Georgia,serif;fill:#5d6674}
+          .bxa{fill:#fffefa;stroke:#9fb3c8;stroke-width:1.6}
+          .bxb{fill:#dae3ee;stroke:#1f3a5c;stroke-width:2}
+          .ara{stroke:#b25a3e;stroke-width:2;fill:none;marker-end:url(#pa)}
+        </style>
+      </defs>
+
+      <text class="la" x="20" y="30">HOW YOU ALREADY READ AN ADDRESS</text>
+      <rect class="bxa" x="20" y="46" width="200" height="46"/><text class="pa1" x="38" y="76">England</text>
+      <rect class="bxa" x="236" y="46" width="200" height="46"/><text class="pa1" x="254" y="76">Long Eaton</text>
+      <rect class="bxa" x="452" y="46" width="220" height="46"/><text class="pa1" x="470" y="76">Derby Road</text>
+      <rect class="bxb" x="688" y="46" width="180" height="46"/><text class="pa1" x="706" y="76">Number 14</text>
+      <path class="ara" d="M224 69 L232 69"/><path class="ara" d="M440 69 L448 69"/><path class="ara" d="M676 69 L684 69"/>
+      <text class="na" x="20" y="116">wide</text>
+      <text class="na" x="790" y="116">narrow</text>
+
+      <line x1="20" y1="146" x2="1100" y2="146" stroke="#cdc7b8" stroke-width="1"/>
+
+      <text class="la" x="20" y="180">HOW YOU READ AN ARRAY</text>
+      <rect class="bxa" x="20" y="196" width="200" height="46"/><text class="cda" x="38" y="226">arr[2]</text>
+      <rect class="bxa" x="236" y="196" width="200" height="46"/><text class="cda" x="254" y="226">[1]</text>
+      <rect class="bxa" x="452" y="196" width="220" height="46"/><text class="cda" x="470" y="226">[3]</text>
+      <rect class="bxb" x="688" y="196" width="180" height="46"/><text class="pa1" x="706" y="226">the value</text>
+      <path class="ara" d="M224 219 L232 219"/><path class="ara" d="M440 219 L448 219"/><path class="ara" d="M676 219 L684 219"/>
+      <text class="na" x="900" y="200">Same move. Start wide,</text>
+      <text class="na" x="900" y="224">narrow one step per</text>
+      <text class="na" x="900" y="248">bracket, arrive at the thing.</text>
+    </svg>
+    <figcaption>Nobody finds a postal address confusing, and it is the identical operation. You start with the biggest container and work inwards until there is nothing left to open. NumPy lets you write the whole address in one set of brackets with commas &mdash; <span class="mono">arr[2, 1, 3]</span> &mdash; which is shorter and means exactly the same thing.</figcaption>
+  </figure>
+
+  <h3>Now the third picture: sheets in a book</h3>
+
+  <p>Boxes inside boxes gets you a long way, but it goes a bit vague once you&rsquo;re three layers down. Here is a sharper version for arrays specifically, and it is the one to keep.</p>
+
+  <p><strong>Think of sheets of paper.</strong> One sheet has rows and columns ruled on it &mdash; an ordinary table, the sort you&rsquo;d draw by hand. That is a two-dimensional array, and it is the thing at the centre of everything else.</p>
+
+  <p>Now stack several sheets and bind them. You have a book. Each sheet keeps its own rows and columns exactly as before &mdash; nothing about a page changes because you put other pages behind it. But now there is one extra thing you have to say before you can point at a cell: <em>which page.</em></p>
+
+  <div class="grid">
+    <div class="span-4"><div class="card">
+      <span class="label">One sheet</span>
+      <h3>Rows and columns</h3>
+      <p>A table. Two numbers get you to any cell: which row, which column. <span class="mono">arr[1, 2]</span></p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">A book</span>
+      <h3>Pages of tables</h3>
+      <p>Three numbers now. Which page, then which row, then which column. <span class="mono">arr[0, 1, 2]</span></p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">A shelf of books</span>
+      <h3>And so on, for ever</h3>
+      <p>Four numbers. Which book, which page, which row, which column. The pattern never changes &mdash; you just say one more thing at the front.</p>
+    </div></div>
+  </div>
+
+  <div class="annotation">
+    <p><strong>This is why the numbers in a shape read outside in.</strong> A shape of <span class="mono">(3, 5, 4)</span> means three pages, each with five rows, each row holding four values. Biggest container first, smallest last. Same order as the address. Same order as everything else in this guide.</p>
+  </div>
+
+  <p>One honest wrinkle, and then we can get on. Underneath, NumPy does not really keep separate sheets. It keeps one long unbroken run of numbers and remembers a rule for folding it into pages. You will never see that and it will never bother you &mdash; but it explains why reshaping an array is instant. Nothing gets moved. NumPy just changes its mind about where the page breaks go.</p>
+</div></section>
+
+<section id="array"><div class="shell">
+  <div class="section-head"><div class="section-no">01 / THE TRADE</div><div><h2>An array is not <em>a list</em></h2><p class="lead">A Python list will hold anything you shove in it. A NumPy array flatly refuses. That refusal is the entire point, and everything else follows from it.</p></div></div>
+
+  <p>Here is the difference, and it is worth understanding properly rather than taking on trust.</p>
+
+  <p>A list does not really hold your things. It holds a row of <em>addresses</em> &mdash; little notes saying where each thing has been put. The things themselves are scattered all over memory, and they can be anything: a number here, a string there, another list over there. Wonderfully flexible. Also, to add one to every number in it, Python has to go to each note, walk to wherever it points, work out what kind of object it has found, decide what &ldquo;add one&rdquo; even means for that kind of object, do it, and put the answer somewhere. Once per value. The working out is the slow part, and it happens every single time even though the answer is identical.</p>
+
+  <p>An array makes one trade. <strong>Every value must be the same type.</strong> Once that is guaranteed, the values can sit end to end in a single unbroken block. No notes. No walking. No working out what anything is, because it was stated once at the front and applies to all of them.</p>
+
+  <p class="scroll-hint">Scroll sideways to see both halves &rarr;</p>
+  <figure class="figure wide">
+    <span class="mini-label">Figure 02 &middot; What is actually sitting in memory</span>
+    <svg viewBox="0 0 1120 400" role="img" aria-labelledby="mem-t mem-d">
+      <title id="mem-t">A list stores addresses; an array stores values</title>
+      <desc id="mem-d">A Python list holds a row of pointers, each leading to a separately stored object of any type. A NumPy array holds the values themselves, all one type, end to end in a single block.</desc>
+      <defs>
+        <marker id="p1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#b25a3e"/></marker>
+        <style>
+          .hd{font:700 16px ui-monospace,monospace;fill:#b25a3e;letter-spacing:.09em}
+          .ti{font:700 23px Georgia,serif;fill:#151d28}
+          .su{font:16px Georgia,serif;fill:#5d6674}
+          .cellv{font:700 16px ui-monospace,monospace;fill:#151d28}
+          .cellw{font:700 16px ui-monospace,monospace;fill:#fffefa}
+          .tag{font:14px ui-monospace,monospace;fill:#5d6674}
+          .boxl{fill:#fffefa;stroke:#b25a3e;stroke-width:2}
+          .boxo{fill:#f3e0d7;stroke:#b25a3e;stroke-width:2}
+          .boxa{fill:#1f3a5c;stroke:#1f3a5c;stroke-width:2}
+          .frame{fill:none;stroke:#cdc7b8;stroke-width:1}
+          .ptr{stroke:#b25a3e;stroke-width:2;fill:none;marker-end:url(#p1)}
+        </style>
+      </defs>
+
+      <text class="hd" x="20" y="28">THE LIST</text>
+      <text class="ti" x="20" y="60">A row of notes saying where things are</text>
+      <text class="su" x="20" y="88">Each slot holds a note. The actual thing lives somewhere else entirely.</text>
+
+      <rect class="boxl" x="20" y="108" width="72" height="46"/><text class="cellv" x="50" y="138">&#8226;</text>
+      <rect class="boxl" x="96" y="108" width="72" height="46"/><text class="cellv" x="126" y="138">&#8226;</text>
+      <rect class="boxl" x="172" y="108" width="72" height="46"/><text class="cellv" x="202" y="138">&#8226;</text>
+      <rect class="boxl" x="248" y="108" width="72" height="46"/><text class="cellv" x="278" y="138">&#8226;</text>
+      <text class="tag" x="20" y="174">slot 0</text><text class="tag" x="96" y="174">slot 1</text>
+      <text class="tag" x="172" y="174">slot 2</text><text class="tag" x="248" y="174">slot 3</text>
+
+      <path class="ptr" d="M56 158 L82 236"/>
+      <path class="ptr" d="M132 158 L200 236"/>
+      <path class="ptr" d="M208 158 L330 236"/>
+      <path class="ptr" d="M284 158 L446 236"/>
+
+      <rect class="boxo" x="40" y="242" width="104" height="46"/><text class="cellv" x="62" y="271">int 8</text>
+      <rect class="boxo" x="160" y="242" width="104" height="46"/><text class="cellv" x="174" y="271">float 8.5</text>
+      <rect class="boxo" x="286" y="242" width="104" height="46"/><text class="cellv" x="300" y="271">str 'ok'</text>
+      <rect class="boxo" x="404" y="242" width="104" height="46"/><text class="cellv" x="418" y="271">list [...]</text>
+      <text class="su" x="40" y="316">Scattered. Any type. Every read is a walk, then a question:</text>
+      <text class="su" x="40" y="340">what is this thing, and what does &#8220;add one&#8221; mean for it?</text>
+      <text class="su" x="40" y="376" style="fill:#b25a3e;font-weight:700">Flexible, and slow for exactly that reason.</text>
+
+      <line class="frame" x1="560" y1="10" x2="560" y2="390"/>
+
+      <text class="hd" x="600" y="28">THE ARRAY</text>
+      <text class="ti" x="600" y="60">One long shelf of identical slots</text>
+      <text class="su" x="600" y="88">One type, stated once. The values sit end to end with no gaps.</text>
+
+      <rect class="boxa" x="600" y="108" width="66" height="46"/><text class="cellw" x="620" y="138">8.0</text>
+      <rect class="boxa" x="668" y="108" width="66" height="46"/><text class="cellw" x="688" y="138">8.5</text>
+      <rect class="boxa" x="736" y="108" width="66" height="46"/><text class="cellw" x="756" y="138">3.0</text>
+      <rect class="boxa" x="804" y="108" width="66" height="46"/><text class="cellw" x="824" y="138">1.5</text>
+      <rect class="boxa" x="872" y="108" width="66" height="46"/><text class="cellw" x="892" y="138">9.0</text>
+      <rect class="boxa" x="940" y="108" width="66" height="46"/><text class="cellw" x="960" y="138">2.5</text>
+
+      <text class="tag" x="600" y="174">every slot the same size &#183; every slot the same kind of thing</text>
+
+      <rect class="frame" x="600" y="200" width="406" height="54"/>
+      <text class="cellv" x="620" y="233">dtype: float64</text>
+      <text class="su" x="790" y="233">&mdash; said once, for all of them</text>
+
+      <text class="su" x="600" y="294">No walking. No questions. Slot 4,000 is found by</text>
+      <text class="su" x="600" y="318">arithmetic instead of by counting along the row.</text>
+      <text class="su" x="600" y="352">The looping still happens &mdash; but down in compiled C,</text>
+      <text class="su" x="600" y="376" style="fill:#1f3a5c;font-weight:700">and it never appears in your code at all.</text>
+    </svg>
+    <figcaption>The list is a set of directions. The array is the street. Because every house is the same size you can calculate where number 4,000 is instead of walking past 3,999 of them &mdash; and because every house holds the same kind of thing, the question &ldquo;what am I dealing with?&rdquo; gets answered once instead of a million times.</figcaption>
+  </figure>
+
+  <div class="grid">
+    <div class="span-4"><div class="card">
+      <span class="label">What you get 01</span>
+      <h3>Maths on the whole thing</h3>
+      <p><span class="mono">arr * 2</span> doubles every value. No loop written, no loop visible. This is called <span class="term">vectorisation</span> and it is the reason NumPy exists at all.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">What you get 02</span>
+      <h3>Free reshaping</h3>
+      <p>The values are one flat run. The shape is a note on the side saying where the page breaks go. Change the note and you have changed the shape &mdash; without moving a single number.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">What it costs</span>
+      <h3>Types get enforced quietly</h3>
+      <p>Put an integer next to a float and the integer becomes a float, because the array can only carry one type. Nothing warns you. Check <span class="mono">.dtype</span> early.</p>
+    </div></div>
+  </div>
+
+<pre><code>import numpy as np
+
+source_values = [8, 8.5]
+values_array = np.array(source_values)
+
+values_array         <span class="c"># array([8. , 8.5])</span>
+values_array.dtype   <span class="c"># dtype('float64')</span></code></pre>
+
+  <p>The <span class="mono">8</span> has quietly become <span class="mono">8.0</span>. NumPy picked <span class="mono">float64</span> because it was the one type that could hold both values without throwing anything away. It will not mention this to you, and it is a common reason a result looks wrong later for no obvious cause.</p>
+
+  <div class="code-pair">
+    <div>
+      <div class="cap"><span class="label">A list</span><strong>You describe the journey</strong></div>
+<pre><code>result = []
+for value in values:
+    result.append(value + 1)</code></pre>
+    </div>
+    <div>
+      <div class="cap"><span class="label">An array</span><strong>You describe the destination</strong></div>
+<pre><code>result = arr + 1</code></pre>
+    </div>
+  </div>
+
+  <p>That is the shift. You stop writing down the steps and start writing down what you want to be true at the end. Hold onto it, because when <span class="mono">axis</span> turns up in section 06 it only makes sense if you have stopped worrying about which element is being visited when.</p>
+
+  <div class="history">
+    <span class="label">Where this comes from</span>
+    <h3>Hollerith&rsquo;s cards, 1890</h3>
+    <p>The 1880 United States census took eight years to count by hand. With the population climbing, the Census Bureau faced the genuinely absurd prospect that the 1890 count would not be finished before the 1900 one was due to start. A Bureau employee called Herman Hollerith suggested punching holes in stiff cards to represent each person, then running the cards through a machine that closed an electrical circuit wherever a hole let a pin drop through.</p>
+    <p>The 1890 count came in inside two years. But the thing we inherited was not the machine, it was the card. Every card the same size. Every field in a fixed column. Every record built identically to every other one, whether or not it had anything interesting to say. Rigid, uniform, positional &mdash; the same three demands a NumPy array makes today. Hollerith&rsquo;s company eventually became part of IBM.</p>
+  </div>
+
+  <div class="history">
+    <span class="label">Where this comes from</span>
+    <h3>Iverson&rsquo;s notation, 1962</h3>
+    <p>Kenneth Iverson was a Harvard mathematician who decided the problem with describing computation was not the computers but the handwriting. In 1962 he published <em>A Programming Language</em>, in which operations applied to whole arrays as single acts. Adding two tables together: one symbol. Summing a column: one symbol. The loop was not optimised away, it was never written, because the notation gave it nowhere to live.</p>
+    <p>The language became APL and it was gloriously mad &mdash; it needed its own typeface of Greek and geometric symbols, and programs were frequently unreadable to everyone including the person who wrote them last Tuesday. The core idea survived anyway. Whole-array operations, the business of making differently shaped arrays fit each other, and naming a direction to work along all come from APL. NumPy is what happened when those ideas grew up and got a job.</p>
+  </div>
+</div></section>
+
+<section id="shape"><div class="shell">
+  <div class="section-head"><div class="section-no">02 / SHAPE</div><div><h2>Pages, rows <em>and columns</em></h2><p class="lead">A shape is a list of numbers in brackets telling you how the thing is built. Biggest container first, smallest last. That is it &mdash; but it is the single most useful thing to know about any array, so it is worth getting comfortable.</p></div></div>
+
+  <p>Back to the book. One sheet has rows and columns. Stack sheets and you get pages. Stack books and you get a shelf. Every time you add a layer you say one more thing at the front, and the thing at the centre &mdash; the ordinary table with rows and columns &mdash; never changes.</p>
+
+  <p class="scroll-hint">Scroll sideways for the full progression &rarr;</p>
+  <figure class="figure wide">
+    <span class="mini-label">Figure 03 &middot; One sheet, then a book &mdash; the table never changes</span>
+    <svg viewBox="0 0 1120 350" role="img" aria-labelledby="shp-t shp-d">
+      <title id="shp-t">Array shapes from one to three dimensions</title>
+      <desc id="shp-d">A one-dimensional array is a single row of values. A two-dimensional array is one sheet with rows and columns. A three-dimensional array is several sheets bound as a book.</desc>
+      <defs>
+        <style>
+          .hd2{font:700 15px ui-monospace,monospace;fill:#b25a3e;letter-spacing:.09em}
+          .sh{font:700 20px ui-monospace,monospace;fill:#1f3a5c}
+          .su2{font:16px Georgia,serif;fill:#5d6674}
+          .cv{font:700 15px ui-monospace,monospace;fill:#151d28}
+          .rw{font:700 15px ui-monospace,monospace;fill:#1f3a5c}
+          .outer{fill:#dae3ee;stroke:#1f3a5c;stroke-width:2.5}
+          .midb{fill:#fffefa;stroke:#b25a3e;stroke-width:2}
+          .cell{fill:#fffefa;stroke:#9fb3c8;stroke-width:1.2}
+          .slot{fill:#f4f1e8;stroke:#c39a80;stroke-width:1}
+        </style>
+      </defs>
+
+      <text class="hd2" x="20" y="28">A SINGLE ROW</text>
+      <text class="sh" x="20" y="56">(6,)</text>
+      <rect class="outer" x="20" y="70" width="278" height="54"/>
+      <rect class="cell" x="30" y="80" width="42" height="34"/><text class="cv" x="47" y="103">3</text>
+      <rect class="cell" x="76" y="80" width="42" height="34"/><text class="cv" x="93" y="103">1</text>
+      <rect class="cell" x="122" y="80" width="42" height="34"/><text class="cv" x="139" y="103">4</text>
+      <rect class="cell" x="168" y="80" width="42" height="34"/><text class="cv" x="185" y="103">1</text>
+      <rect class="cell" x="214" y="80" width="42" height="34"/><text class="cv" x="231" y="103">5</text>
+      <rect class="cell" x="260" y="80" width="34" height="34"/><text class="cv" x="273" y="103">9</text>
+      <text class="su2" x="20" y="152">Just a row of values. One number in</text>
+      <text class="su2" x="20" y="176">the shape, one number to point with.</text>
+      <text class="sh" x="20" y="210">arr[4]</text>
+
+      <text class="su2" x="20" y="256" style="fill:#1f3a5c;font-weight:700">Why the stray comma?</text>
+      <text class="su2" x="20" y="282">(6) is just the number six. (6,) is a</text>
+      <text class="su2" x="20" y="306">tuple holding six. Python punctuation,</text>
+      <text class="su2" x="20" y="330">not NumPy&#8217;s doing.</text>
+
+      <text class="hd2" x="380" y="28">ONE SHEET</text>
+      <text class="sh" x="380" y="56">(3, 4)</text>
+      <rect class="outer" x="380" y="70" width="252" height="146"/>
+      <rect class="midb" x="392" y="82" width="228" height="38"/><text class="rw" x="406" y="106">row 0 &mdash; four values</text>
+      <rect class="midb" x="392" y="126" width="228" height="38"/><text class="rw" x="406" y="150">row 1 &mdash; four values</text>
+      <rect class="midb" x="392" y="170" width="228" height="38"/><text class="rw" x="406" y="194">row 2 &mdash; four values</text>
+      <text class="su2" x="380" y="244">Three rows, four columns. Two numbers</text>
+      <text class="su2" x="380" y="268">to point with: which row, which column.</text>
+      <text class="sh" x="380" y="302">arr[1, 2]</text>
+      <text class="su2" x="380" y="334">Rows first. Not because they matter more.</text>
+
+      <text class="hd2" x="740" y="28">A BOOK OF SHEETS</text>
+      <text class="sh" x="740" y="56">(2, 3, 4)</text>
+      <rect class="outer" x="740" y="70" width="292" height="206"/>
+      <rect class="midb" x="752" y="82" width="268" height="90"/>
+      <text class="rw" x="764" y="104">page 0</text>
+      <rect class="slot" x="764" y="112" width="244" height="15"/>
+      <rect class="slot" x="764" y="132" width="244" height="15"/>
+      <rect class="slot" x="764" y="152" width="244" height="15"/>
+      <rect class="midb" x="752" y="180" width="268" height="90"/>
+      <text class="rw" x="764" y="202">page 1</text>
+      <rect class="slot" x="764" y="210" width="244" height="15"/>
+      <rect class="slot" x="764" y="230" width="244" height="15"/>
+      <rect class="slot" x="764" y="250" width="244" height="15"/>
+      <text class="su2" x="740" y="304">Two pages, each a complete 3&times;4 sheet.</text>
+      <text class="su2" x="740" y="328">Three numbers now: page, row, column.</text>
+    </svg>
+    <figcaption>Adding a dimension does not disturb the sheet at the centre. It puts another sheet behind it, and adds one more number at the front of the shape and one more step at the front of the address. A four-dimensional array is <span class="mono">(books, pages, rows, columns)</span> and works identically. It is turtles all the way down, and the turtles are all the same turtle.</figcaption>
+  </figure>
+
+  <div class="grid">
+    <div class="span-6"><div class="card">
+      <span class="label">The four things to ask an array</span>
+      <h3>No brackets on any of these</h3>
+      <p>These are facts about the array, not jobs it does. Putting brackets after them gets you something baffling rather than an answer.</p>
+      <table style="margin-top:18px">
+        <tr><td class="mono">.shape</td><td>How it&rsquo;s built, as a tuple. Check this constantly.</td></tr>
+        <tr><td class="mono">.ndim</td><td>How many layers &mdash; how long the shape tuple is.</td></tr>
+        <tr><td class="mono">.size</td><td>How many values in total, the shape multiplied out.</td></tr>
+        <tr><td class="mono">.dtype</td><td>What kind of thing is stored in every slot.</td></tr>
+      </table>
+    </div></div>
+    <div class="span-6"><div class="card">
+      <span class="label">Worth keeping to hand</span>
+      <h3>All three at once</h3>
+      <p>Print this whenever an array surprises you. It answers what&rsquo;s in it, how it&rsquo;s built, and how it&rsquo;s stored, in one go.</p>
+<pre style="margin-top:18px"><code>print(
+    f"* Array:\n {arr} \n\n"
+    f"* Shape: \n {arr.shape} \n\n"
+    f"* Type:  \n {arr.dtype}"
+)</code></pre>
+      <p>The <span class="mono">f</span> makes the curly braces live. The <span class="mono">\n</span> pairs put a blank line between sections. Neither touches the array &mdash; only the printout.</p>
+    </div></div>
+  </div>
+
+  <div class="annotation">
+    <p><strong>A shape tells you the furniture, not what&rsquo;s on it.</strong> <span class="mono">(3, 4)</span> means three rows of four. It has no idea whether that&rsquo;s three shops with four quarters of takings, or four shops with three. Only you know which way round you built it, and NumPy will never think to ask.</p>
+  </div>
+
+  <h3>Reshaping: the only rule is that the count must match</h3>
+
+  <p>Reshaping refolds the same values into a different arrangement. Nothing is created, nothing is thrown away, so the total has to come out the same. Thirty values can become three rows of ten, or six rows of five, or three pages of two rows of five &mdash; all of those multiply to thirty. They cannot become four rows of eight, because that is thirty-two and you are two values short.</p>
+
+<pre><code>arr = np.arange(30)
+
+arr.reshape(3, 10)      <span class="c"># 3 rows of 10</span>
+arr.reshape(3, 2, 5)    <span class="c"># 3 pages, each 2 rows of 5</span>
+arr.reshape(3, -1)      <span class="c"># -1 means "you work it out"  ->  (3, 10)</span>
+arr.reshape(-1, 5)      <span class="c">#                             ->  (6, 5)</span>
+arr.reshape(-1)         <span class="c"># flat again                   ->  (30,)</span></code></pre>
+
+  <p>The <span class="mono">-1</span> is you telling NumPy to do the arithmetic. It works whenever the division comes out whole, and refuses when it doesn&rsquo;t &mdash; <span class="mono">arr.reshape(4, -1)</span> on thirty values fails, because thirty does not go into four. Check <span class="mono">arr.size</span> first and the possible shapes are just the ways that number can be grouped.</p>
+
+  <div class="history">
+    <span class="label">Where this comes from</span>
+    <h3>The Fortran argument, 1957</h3>
+    <p>When you write a table into one long run of memory, somebody has to decide which way to unroll it. Fortran, released by IBM in 1957 for numerical work, went down the columns &mdash; all the way down the first, then start the second. C, arriving in the early seventies with different priorities, went across the rows.</p>
+    <p>Neither is wrong. The difference is invisible right up until you connect two systems that disagree, at which point your data comes out transposed and you spend an afternoon finding out why. NumPy uses C order by default and still carries an <span class="mono">order</span> argument on <span class="mono">reshape()</span> and <span class="mono">flatten()</span>, where <span class="mono">'C'</span> means rows-first and <span class="mono">'F'</span> means columns-first. If you ever meet <span class="mono">order='F'</span> and wonder what the F is doing there &mdash; it is a scheduling decision made at IBM before the integrated circuit was invented.</p>
+  </div>
+</div></section>
+
+<section id="reaching"><div class="shell">
+  <div class="section-head"><div class="section-no">03 / REACHING IN</div><div><h2>Getting the values <em>back out</em></h2><p class="lead">Square brackets, one address per layer, commas between them. The addressing is easy once you have seen it. Slicing is the bit that looks like line noise the first time and turns out to be three simple ideas, so we&rsquo;ll do those properly.</p></div></div>
+
+<pre><code>arr[row, column]                 <span class="c"># one sheet</span>
+arr[page, row, column]           <span class="c"># a book</span>
+arr[book, page, row, column]     <span class="c"># a shelf</span></code></pre>
+
+  <p>Same as the postal address in section 00. Widest thing first, narrowest last, and the value you want falls out of the end. A colon means <em>all of them</em> in that position &mdash; it doesn&rsquo;t remove the position, it fills it with &ldquo;everything&rdquo;.</p>
+
+<pre><code>arr[3, :]      <span class="c"># row 3, every column</span>
+arr[:, 3]      <span class="c"># every row, column 3</span>
+arr[0, :, 2]   <span class="c"># page 0, every row, column 2</span></code></pre>
+
+  <h3>Slicing, slowly</h3>
+
+  <p>A slice is a range instead of a single position. It has the form <span class="mono">start:stop</span>, and there are exactly three things to know about it.</p>
+
+  <div class="grid">
+    <div class="span-4"><div class="card">
+      <span class="label">Thing one</span>
+      <h3>Counting starts at nothing</h3>
+      <p>The first item is number 0, not number 1. Everyone hates this for about a fortnight and then stops noticing.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">Thing two</span>
+      <h3>The stop is not included</h3>
+      <p><span class="mono">1:4</span> gives you 1, 2 and 3. It stops <em>before</em> 4. Think of it as &ldquo;up to but not including&rdquo;, the way a shop is open 9 till 5 and shut at 5.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">Thing three</span>
+      <h3>Minus counts from the back</h3>
+      <p><span class="mono">-1</span> is the last item, <span class="mono">-2</span> the one before it. It does not reverse anything &mdash; it only changes which end you count from.</p>
+    </div></div>
+  </div>
+
+  <p class="scroll-hint">Scroll sideways for both directions &rarr;</p>
+  <figure class="figure wide">
+    <span class="mini-label">Figure 04 &middot; Counting from the front, counting from the back</span>
+    <svg viewBox="0 0 1120 330" role="img" aria-labelledby="sl-t sl-d">
+      <title id="sl-t">Positive and negative slice positions</title>
+      <desc id="sl-d">Six values numbered zero to five from the left and minus six to minus one from the right. Four example slices are shown with the values each one returns.</desc>
+      <defs>
+        <style>
+          .ls{font:700 15px ui-monospace,monospace;letter-spacing:.08em}
+          .vs{font:700 18px ui-monospace,monospace;fill:#151d28}
+          .ix{font:700 15px ui-monospace,monospace;fill:#1f3a5c}
+          .ixn{font:700 15px ui-monospace,monospace;fill:#b25a3e}
+          .ns{font:16px Georgia,serif;fill:#5d6674}
+          .cds{font:700 19px ui-monospace,monospace;fill:#1f3a5c}
+          .cs{fill:#fffefa;stroke:#9fb3c8;stroke-width:1.5}
+          .hi{fill:#dae3ee;stroke:#1f3a5c;stroke-width:2.5}
+          .hr{fill:#f3e0d7;stroke:#b25a3e;stroke-width:2.5}
+        </style>
+      </defs>
+
+      <text class="ls" x="20" y="26" style="fill:#1f3a5c">COUNTING FROM THE FRONT &#8594;</text>
+      <text class="ix" x="46" y="52">0</text><text class="ix" x="136" y="52">1</text><text class="ix" x="226" y="52">2</text>
+      <text class="ix" x="316" y="52">3</text><text class="ix" x="406" y="52">4</text><text class="ix" x="496" y="52">5</text>
+
+      <rect class="cs" x="20" y="62" width="80" height="52"/><text class="vs" x="46" y="95">10</text>
+      <rect class="cs" x="110" y="62" width="80" height="52"/><text class="vs" x="136" y="95">20</text>
+      <rect class="cs" x="200" y="62" width="80" height="52"/><text class="vs" x="226" y="95">30</text>
+      <rect class="cs" x="290" y="62" width="80" height="52"/><text class="vs" x="316" y="95">40</text>
+      <rect class="cs" x="380" y="62" width="80" height="52"/><text class="vs" x="406" y="95">50</text>
+      <rect class="cs" x="470" y="62" width="80" height="52"/><text class="vs" x="496" y="95">60</text>
+
+      <text class="ixn" x="40" y="136">-6</text><text class="ixn" x="130" y="136">-5</text><text class="ixn" x="220" y="136">-4</text>
+      <text class="ixn" x="310" y="136">-3</text><text class="ixn" x="400" y="136">-2</text><text class="ixn" x="490" y="136">-1</text>
+      <text class="ls" x="20" y="162" style="fill:#b25a3e">&#8592; COUNTING FROM THE BACK</text>
+
+      <text class="cds" x="20" y="212">arr[1:4]</text>
+      <rect class="cs" x="180" y="188" width="60" height="34"/><text class="vs" x="196" y="212">10</text>
+      <rect class="hi" x="244" y="188" width="60" height="34"/><text class="vs" x="260" y="212">20</text>
+      <rect class="hi" x="308" y="188" width="60" height="34"/><text class="vs" x="324" y="212">30</text>
+      <rect class="hi" x="372" y="188" width="60" height="34"/><text class="vs" x="388" y="212">40</text>
+      <rect class="cs" x="436" y="188" width="60" height="34"/><text class="vs" x="452" y="212">50</text>
+      <rect class="cs" x="500" y="188" width="60" height="34"/><text class="vs" x="516" y="212">60</text>
+      <text class="ns" x="590" y="212">start at 1, stop before 4</text>
+
+      <text class="cds" x="20" y="262">arr[-3:]</text>
+      <rect class="cs" x="180" y="238" width="60" height="34"/><text class="vs" x="196" y="262">10</text>
+      <rect class="cs" x="244" y="238" width="60" height="34"/><text class="vs" x="260" y="262">20</text>
+      <rect class="cs" x="308" y="238" width="60" height="34"/><text class="vs" x="324" y="262">30</text>
+      <rect class="hr" x="372" y="238" width="60" height="34"/><text class="vs" x="388" y="262">40</text>
+      <rect class="hr" x="436" y="238" width="60" height="34"/><text class="vs" x="452" y="262">50</text>
+      <rect class="hr" x="500" y="238" width="60" height="34"/><text class="vs" x="516" y="262">60</text>
+      <text class="ns" x="590" y="262">start 3 from the end, no stop given, so run to the end</text>
+
+      <text class="cds" x="20" y="312">arr[-3:-1]</text>
+      <rect class="cs" x="180" y="288" width="60" height="34"/><text class="vs" x="196" y="312">10</text>
+      <rect class="cs" x="244" y="288" width="60" height="34"/><text class="vs" x="260" y="312">20</text>
+      <rect class="cs" x="308" y="288" width="60" height="34"/><text class="vs" x="324" y="312">30</text>
+      <rect class="hr" x="372" y="288" width="60" height="34"/><text class="vs" x="388" y="312">40</text>
+      <rect class="hr" x="436" y="288" width="60" height="34"/><text class="vs" x="452" y="312">50</text>
+      <rect class="cs" x="500" y="288" width="60" height="34"/><text class="vs" x="516" y="312">60</text>
+      <text class="ns" x="590" y="312">same start, but stop before -1, so the last one is left behind</text>
+    </svg>
+    <figcaption>Leave the start off and it begins at the beginning. Leave the stop off and it runs to the end. Leave both off &mdash; just a bare colon &mdash; and you get everything, which is why <span class="mono">arr[:, 3]</span> means &ldquo;all the rows, column three&rdquo;. The stop being excluded looks fussy but it makes <span class="mono">arr[:3]</span> and <span class="mono">arr[3:]</span> fit together perfectly with no overlap and nothing missed.</figcaption>
+  </figure>
+
+  <h3>Slices in more than one direction</h3>
+
+  <p>The comma keeps the directions separate, so you can slice each one independently. Read each side on its own and then put them together.</p>
+
+<pre><code>arr[1:3, -2:]
+
+<span class="c">#  1:3   ->  rows 1 and 2      (stop 3 is excluded)</span>
+<span class="c">#  -2:   ->  the last two columns</span>
+<span class="c">#  together: a rectangular block cut out of the sheet</span></code></pre>
+
+  <p>And with a book, the same again with one more address on the front:</p>
+
+<pre><code>arr[1:2, -3:-1, -3:]
+
+<span class="c">#  1:2    ->  page 1, kept as a slice rather than picked out</span>
+<span class="c">#  -3:-1  ->  the third and second rows from the end</span>
+<span class="c">#  -3:    ->  the last three columns</span>
+<span class="c">#  result shape: (1, 2, 3)</span></code></pre>
+
+  <div class="annotation">
+    <p><strong>First address, second address, third address &mdash; and what you&rsquo;re holding at the end is the package.</strong> If you can read a slice one comma at a time, out loud, in plain English, you can read any of them. The complicated-looking ones are just three simple ones standing next to each other.</p>
+  </div>
+
+  <h3>One number takes a layer off. A slice keeps it.</h3>
+
+  <p>This catches everyone, and it matters more than it looks like it should.</p>
+
+  <figure class="figure">
+    <span class="mini-label">Figure 05 &middot; Picking a page out, versus taking a thin slice of the book</span>
+    <svg viewBox="0 0 1120 250" role="img" aria-labelledby="idx-t idx-d">
+      <title id="idx-t">Integer indexing versus slice indexing</title>
+      <desc id="idx-d">Selecting page one with a plain number returns a five by four sheet. Selecting the same page with a slice returns a one by five by four book containing a single page.</desc>
+      <defs>
+        <marker id="p3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#1f3a5c"/></marker>
+        <style>
+          .cd{font:700 19px ui-monospace,monospace;fill:#1f3a5c}
+          .cdr{font:700 20px ui-monospace,monospace;fill:#b25a3e}
+          .lb{font:700 15px ui-monospace,monospace;fill:#b25a3e;letter-spacing:.08em}
+          .nt{font:16px Georgia,serif;fill:#5d6674}
+          .src{fill:#dae3ee;stroke:#1f3a5c;stroke-width:2.5}
+          .blk{fill:#fffefa;stroke:#9fb3c8;stroke-width:1.5}
+          .sel{fill:#fffefa;stroke:#b25a3e;stroke-width:3}
+          .keep{fill:#f3e0d7;stroke:#b25a3e;stroke-width:2.5}
+          .arw{stroke:#1f3a5c;stroke-width:2.5;fill:none;marker-end:url(#p3)}
+        </style>
+      </defs>
+
+      <text class="lb" x="20" y="26">THE BOOK &#183; (3, 5, 4)</text>
+      <rect class="src" x="20" y="40" width="200" height="180"/>
+      <rect class="blk" x="32" y="52" width="176" height="50"/><text class="nt" x="46" y="83">page 0</text>
+      <rect class="sel" x="32" y="108" width="176" height="50"/><text class="nt" x="46" y="139" style="fill:#b25a3e;font-weight:700">page 1</text>
+      <rect class="blk" x="32" y="164" width="176" height="50"/><text class="nt" x="46" y="195">page 2</text>
+
+      <path class="arw" d="M234 100 L296 100"/>
+      <path class="arw" d="M234 168 L296 168"/>
+
+      <text class="cd" x="316" y="76">arr[1]</text>
+      <text class="nt" x="316" y="102">&#8220;that page, please&#8221;</text>
+      <rect class="keep" x="316" y="114" width="210" height="54"/>
+      <text class="cdr" x="336" y="148">(5, 4)</text>
+      <text class="nt" x="316" y="194">a loose sheet &mdash; out of the book</text>
+
+      <text class="cd" x="590" y="76">arr[1:2]</text>
+      <text class="nt" x="590" y="102">&#8220;a book containing that page&#8221;</text>
+      <rect class="keep" x="590" y="114" width="250" height="54"/>
+      <text class="cdr" x="610" y="148">(1, 5, 4)</text>
+      <text class="nt" x="590" y="194">a very thin book &mdash; still a book</text>
+
+      <line x1="890" y1="20" x2="890" y2="234" stroke="#cdc7b8" stroke-width="1"/>
+      <text class="lb" x="918" y="76">SAME NUMBERS</text>
+      <text class="nt" x="918" y="108">Different shape. And shape</text>
+      <text class="nt" x="918" y="132">is what decides whether it</text>
+      <text class="nt" x="918" y="156">will combine with anything</text>
+      <text class="nt" x="918" y="180">else later on.</text>
+    </svg>
+    <figcaption>If a result comes back with more brackets than you expected, a slice is almost always why. Nothing has gone wrong &mdash; you asked for a container and got one. Whether that&rsquo;s helpful or annoying depends entirely on what you plan to do next, which is the subject of section 05.</figcaption>
+  </figure>
+
+  <h3>A warning: slices are windows, not photocopies</h3>
+
+  <p>Slice a Python list and you get a new list. Slice a NumPy array and you usually get a <span class="term">view</span> &mdash; a window onto the same values. Write through the window and you have changed the original.</p>
+
+<pre><code>arr = np.arange(10)
+chunk = arr[0:3]
+chunk[0] = 99
+
+arr    <span class="c"># array([99, 1, 2, 3, 4, 5, 6, 7, 8, 9])</span>
+       <span class="c"># the original changed, and nobody mentioned it</span></code></pre>
+
+  <div class="warning">
+    <p><strong>This is on purpose, and it is one of the reasons NumPy is quick.</strong> Slicing a million-row array costs nothing, because nothing is copied. The price is that an innocent-looking working variable can be wired straight into your source data.</p>
+    <p>The habit: <strong>if you&rsquo;re going to change it, copy it first.</strong> If you&rsquo;re only reading, the window is free and better.</p>
+    <p><span class="mono">working = arr[0:3].copy()</span></p>
+  </div>
+
+  <table>
+    <thead><tr><th style="width:24%">Call</th><th style="width:28%">What you get</th><th>Use it when</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">arr.flatten()</td><td>A separate copy, flat, always.</td><td>You want the values in one row and you might change them.</td></tr>
+      <tr><td class="mono">arr.reshape(-1)</td><td>A window, flat, where possible.</td><td>You only want to read them and the array is large.</td></tr>
+      <tr><td class="mono">arr.copy()</td><td>A separate copy, same shape.</td><td>You want a genuine backup. Neither of the others gives you one.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="history">
+    <span class="label">Where this comes from</span>
+    <h3>The years of two libraries, 1995&ndash;2006</h3>
+    <p>Arrays reached Python in 1995 in a package called Numeric, written largely by Jim Hugunin. It worked well enough at modest sizes. By the turn of the century a group at the Space Telescope Science Institute, wrangling Hubble images, found it fell over at the sizes they needed and wrote a replacement called numarray. numarray was better with big arrays and worse with small ones.</p>
+    <p>So the scientific Python world spent several years split down the middle, with two incompatible array libraries, two sets of followers, and no way to read each other&rsquo;s code. In 2005 Travis Oliphant took Numeric, rebuilt it with numarray&rsquo;s strengths folded in, and released NumPy in 2006. Everyone came back together within a couple of years.</p>
+    <p>Two things survive from that. Anything written before 2006 refers to libraries that no longer exist, so if a tutorial mentions Numeric or numarray by name it is at least twenty years out of date and you should close the tab. And the merge is why NumPy occasionally offers you two functions that do almost exactly the same thing.</p>
+  </div>
+</div></section>
+
+<section id="condition"><div class="shell">
+  <div class="section-head"><div class="section-no">04 / FILTERING</div><div><h2>Asking a question of <em>everything at once</em></h2><p class="lead">This is where NumPy starts earning its keep. Compare an array to a value and you don&rsquo;t get one answer &mdash; you get an answer for every element, in an array of True and False the same shape as the original. That thing is called a mask, and once you have one you can point it at anything.</p></div></div>
+
+  <p>Start with what it saves you. Here is the same job done twice: keep only the values over four, and average them.</p>
+
+  <div class="code-pair">
+    <div>
+      <div class="cap"><span class="label">Plain Python</span><strong>Eight lines and a decision</strong></div>
+<pre><code>kept = []
+
+for value in values:
+    if value &gt; 4:
+        kept.append(value)
+
+total = 0
+for value in kept:
+    total = total + value
+
+average = total / len(kept)</code></pre>
+    </div>
+    <div>
+      <div class="cap"><span class="label">NumPy</span><strong>One line, no decision</strong></div>
+<pre><code>average = arr[arr &gt; 4].mean()</code></pre>
+    </div>
+  </div>
+
+  <p>Both do the identical work. The difference is that in the left-hand version you are supervising every step &mdash; setting up an empty box, walking the collection, testing each item, deciding whether to keep it, then walking the results again to add them up. In the right-hand version you state the condition and the answer you want, and go and put the kettle on.</p>
+
+  <p>And it scales. Add a second condition and the left-hand version grows another branch. The right-hand version grows five characters.</p>
+
+  <h3>How the mask actually works</h3>
+
+<pre><code>arr = np.array([2, 7, 4, 19, 5])
+
+arr &gt; 4        <span class="c"># array([False,  True, False,  True,  True])</span>
+arr[arr &gt; 4]   <span class="c"># array([ 7, 19,  5])</span></code></pre>
+
+  <p>The first line does the comparing. The second puts that True-and-False array inside the original array&rsquo;s brackets, and NumPy walks the two together keeping everything the mask approved of. The result normally comes back as a single row, because the survivors of a condition rarely form a tidy rectangle.</p>
+
+  <div class="annotation">
+    <p><strong>You have met this before, in pandas.</strong> <span class="mono">df[df["price"] &gt; 4]</span> is doing exactly this: the inner bit makes a column of True and False, the outer brackets keep the rows where it said True. A pandas Series is a NumPy array with labels bolted on, so filtering a DataFrame is this same machinery wearing a nicer coat.</p>
+  </div>
+
+  <h3>The useful trick: build a mask from one array, aim it at another</h3>
+
+  <p>Nothing ties a mask to the array that made it. It is just True and False in a particular shape, and any array of that shape will take it.</p>
+
+  <p class="scroll-hint">Scroll sideways for the full picture &rarr;</p>
+  <figure class="figure wide">
+    <span class="mini-label">Figure 06 &middot; A mask made from one array, applied to another</span>
+    <svg viewBox="0 0 1120 300" role="img" aria-labelledby="msk-t msk-d">
+      <title id="msk-t">Building a mask and applying it to a second array</title>
+      <desc id="msk-d">A comparison on the temperature array produces a mask of True and False. That mask applied to the sales array returns only the sales figures in the positions where the mask was True.</desc>
+      <defs>
+        <marker id="p4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#1f3a5c"/></marker>
+        <style>
+          .lb4{font:700 15px ui-monospace,monospace;fill:#b25a3e;letter-spacing:.08em}
+          .lg4{font:700 15px ui-monospace,monospace;fill:#1f3a5c;letter-spacing:.08em}
+          .vv{font:700 16px ui-monospace,monospace;fill:#151d28}
+          .vw{font:700 16px ui-monospace,monospace;fill:#fffefa}
+          .nt4{font:16px Georgia,serif;fill:#5d6674}
+          .cd4{font:700 18px ui-monospace,monospace;fill:#1f3a5c}
+          .bx{fill:#fffefa;stroke:#9fb3c8;stroke-width:1.4}
+          .tr{fill:#1f3a5c;stroke:#1f3a5c;stroke-width:1.4}
+          .fa{fill:#e5e0d4;stroke:#b3aa98;stroke-width:1.4}
+          .hit{fill:#f3e0d7;stroke:#b25a3e;stroke-width:2.5}
+          .ar4{stroke:#1f3a5c;stroke-width:2.5;fill:none;marker-end:url(#p4)}
+        </style>
+      </defs>
+
+      <text class="lb4" x="20" y="26">TEMPERATURE ON FIVE DAYS</text>
+      <rect class="bx" x="20" y="38" width="82" height="40"/><text class="vv" x="48" y="65">12</text>
+      <rect class="bx" x="106" y="38" width="82" height="40"/><text class="vv" x="134" y="65">27</text>
+      <rect class="bx" x="192" y="38" width="82" height="40"/><text class="vv" x="220" y="65">31</text>
+      <rect class="bx" x="278" y="38" width="82" height="40"/><text class="vv" x="306" y="65">18</text>
+      <rect class="bx" x="364" y="38" width="82" height="40"/><text class="vv" x="392" y="65">24</text>
+
+      <text class="cd4" x="480" y="65">temperature &gt; 25</text>
+      <path class="ar4" d="M232 84 L232 108"/>
+
+      <text class="lb4" x="20" y="136">THE MASK &#183; one answer per day</text>
+      <rect class="fa" x="20" y="148" width="82" height="40"/><text class="vv" x="40" y="175">False</text>
+      <rect class="tr" x="106" y="148" width="82" height="40"/><text class="vw" x="132" y="175">True</text>
+      <rect class="tr" x="192" y="148" width="82" height="40"/><text class="vw" x="218" y="175">True</text>
+      <rect class="fa" x="278" y="148" width="82" height="40"/><text class="vv" x="298" y="175">False</text>
+      <rect class="fa" x="364" y="148" width="82" height="40"/><text class="vv" x="384" y="175">False</text>
+
+      <path class="ar4" d="M232 194 L232 218"/>
+      <text class="cd4" x="480" y="170">sales[hot]</text>
+      <text class="nt4" x="480" y="196">the question was about the weather.</text>
+      <text class="nt4" x="480" y="220">the answer comes out of the till.</text>
+
+      <text class="lg4" x="20" y="246">TAKINGS ON THE SAME FIVE DAYS</text>
+      <rect class="bx" x="20" y="258" width="82" height="40"/><text class="vv" x="42" y="285">340</text>
+      <rect class="hit" x="106" y="258" width="82" height="40"/><text class="vv" x="128" y="285">890</text>
+      <rect class="hit" x="192" y="258" width="82" height="40"/><text class="vv" x="210" y="285">1120</text>
+      <rect class="bx" x="278" y="258" width="82" height="40"/><text class="vv" x="300" y="285">410</text>
+      <rect class="bx" x="364" y="258" width="82" height="40"/><text class="vv" x="386" y="285">700</text>
+
+      <line x1="780" y1="16" x2="780" y2="288" stroke="#cdc7b8" stroke-width="1"/>
+      <text class="lb4" x="812" y="62">WHAT YOU JUST ASSUMED</text>
+      <text class="nt4" x="812" y="96">That the third temperature belongs</text>
+      <text class="nt4" x="812" y="120">with the third day&#8217;s takings.</text>
+      <text class="nt4" x="812" y="154">Nothing checked that. Nothing can.</text>
+      <text class="nt4" x="812" y="178">There are no labels here, only</text>
+      <text class="nt4" x="812" y="202">positions in a row.</text>
+      <text class="nt4" x="812" y="240" style="fill:#b25a3e;font-weight:700">Two lists sorted differently will</text>
+      <text class="nt4" x="812" y="264" style="fill:#b25a3e;font-weight:700">give you a lovely wrong answer.</text>
+    </svg>
+    <figcaption>Asking a question of one dataset and answering it from another is an enormous amount of what real analysis consists of. It is also where the first genuine risk appears, and section 05 is largely about that risk.</figcaption>
+  </figure>
+
+<pre><code>temperature = np.array([12, 27, 31, 18, 24])
+sales       = np.array([340, 890, 1120, 410, 700])
+
+hot = temperature &gt; 25
+sales[hot]              <span class="c"># array([ 890, 1120])</span>
+sales[hot].mean()       <span class="c"># average takings on the hot days</span></code></pre>
+
+  <div class="grid">
+    <div class="span-7"><div class="card">
+      <span class="label">More than one condition</span>
+      <h3>Symbols, not words</h3>
+<pre style="margin:16px 0 0"><code>arr[(arr &gt; 4) &amp; (arr &lt;= 17)]   <span class="c"># both</span>
+arr[(arr &lt;= 5) | (arr &gt; 15)]   <span class="c"># either</span>
+arr[~(arr &gt; 4)]                <span class="c"># not</span></code></pre>
+    </div></div>
+    <div class="span-5"><div class="card">
+      <span class="label">Two things that will bite</span>
+      <h3>Brackets, and vocabulary</h3>
+      <p><strong>Every comparison needs its own brackets.</strong> <span class="mono">&amp;</span> grabs tighter than <span class="mono">&gt;</span> does, so without them Python groups the expression wrongly and the error message will send you somewhere useless.</p>
+      <p style="margin-top:10px"><strong>The words <span class="mono">and</span> and <span class="mono">or</span> will not work.</strong> They want one yes-or-no answer and you have handed them five thousand. The message &mdash; &ldquo;the truth value of an array with more than one element is ambiguous&rdquo; &mdash; means: you used a word where a symbol was needed.</p>
+    </div></div>
+  </div>
+
+  <p style="margin-top:26px">One last small thing. The condition inside the brackets has to name the same array the brackets belong to. Once your working variable is <span class="mono">macro_arr</span>, an old <span class="mono">arr</span> left behind in the condition will either error or, far worse, quietly filter against the wrong data and say nothing.</p>
+
+<pre><code>macro_arr[(macro_arr &lt;= 1) | (macro_arr &gt; 9)]</code></pre>
+</div></section>
+
+<section id="combining" class="modern"><div class="shell">
+  <div class="section-head"><div class="section-no">05 / COMBINING</div><div><h2>Two arrays, laid <em>over each other</em></h2><p class="lead">Everything so far has been about one array. Real work involves several. The syntax for combining them is about four characters long, which is exactly the problem &mdash; there is almost nothing on the page to tell you what NumPy has decided to do.</p></div></div>
+
+  <p>Start with the easy case. Two arrays the same shape, added together.</p>
+
+<pre><code>a = np.array([[1, 2, 3],
+              [4, 5, 6]])
+
+b = np.array([[10, 20, 30],
+              [40, 50, 60]])
+
+a + b     <span class="c"># array([[11, 22, 33],</span>
+          <span class="c">#        [44, 55, 66]])</span></code></pre>
+
+  <p>Top-left meets top-left. Bottom-right meets bottom-right. Every arithmetic operator behaves this way and so does every comparison &mdash; <span class="mono">a &gt; b</span> hands you a mask of which cell beat which.</p>
+
+  <div class="warning">
+    <p><strong>NumPy pairs things up by position. It has no idea what anything is called.</strong></p>
+    <p>Join two DataFrames in pandas and the labels do the work &mdash; the row for Leeds finds the row for Leeds wherever it happens to be sitting. NumPy arrays have no labels at all. Row three meets row three because they are both row three. That is the entire matching logic.</p>
+    <p>So if one array came out of a database sorted by date and the other out of a spreadsheet sorted alphabetically, NumPy will cheerfully pair them up anyway, hand you a result of exactly the right shape, and say nothing whatsoever. It will look perfect. <strong>This is the mistake that ends up in reports.</strong></p>
+  </div>
+
+  <h3>When the shapes don&rsquo;t match: broadcasting</h3>
+
+  <p>Arrays don&rsquo;t have to be the same shape. NumPy will stretch a smaller one across a bigger one if the shapes are compatible. You have done this already without noticing &mdash; <span class="mono">arr * 2</span> is one lonely number stretched across the whole array.</p>
+
+  <p class="scroll-hint">Scroll sideways for the rule &rarr;</p>
+  <figure class="figure wide">
+    <span class="mini-label">Figure 07 &middot; A row stretched across a table</span>
+    <svg viewBox="0 0 1120 300" role="img" aria-labelledby="bc-t bc-d">
+      <title id="bc-t">Broadcasting a row across a table</title>
+      <desc id="bc-d">A three-value row combined with a four by three table. The row is reused for every row of the table. Shapes are lined up at the right-hand end before being compared.</desc>
+      <defs>
+        <marker id="p5" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#dcae76"/></marker>
+        <style>
+          .l5{font:700 15px ui-monospace,monospace;fill:#e8967a;letter-spacing:.08em}
+          .v5{font:700 15px ui-monospace,monospace;fill:#eef2f7}
+          .n5{font:16px Georgia,serif;fill:#bcc7d4}
+          .op{font:700 28px ui-monospace,monospace;fill:#dae3ee}
+          .sh5{font:700 21px ui-monospace,monospace;fill:#eef2f7}
+          .sg{font:700 21px ui-monospace,monospace;fill:#9fe3c0}
+          .c5{fill:#1b2b3d;stroke:#5f7a96;stroke-width:1.3}
+          .c5r{fill:#3a2b22;stroke:#dcae76;stroke-width:1.6}
+          .c5g{fill:#172b25;stroke:#7fc9a4;stroke-width:1.4}
+          .st{stroke:#dcae76;stroke-width:1.6;stroke-dasharray:5 4;fill:none;marker-end:url(#p5)}
+        </style>
+      </defs>
+
+      <text class="l5" x="20" y="26">THE TABLE &#183; (4, 3)</text>
+      <rect class="c5" x="20" y="38" width="56" height="32"/><text class="v5" x="43" y="60">1</text>
+      <rect class="c5" x="80" y="38" width="56" height="32"/><text class="v5" x="103" y="60">2</text>
+      <rect class="c5" x="140" y="38" width="56" height="32"/><text class="v5" x="163" y="60">3</text>
+      <rect class="c5" x="20" y="74" width="56" height="32"/><text class="v5" x="43" y="96">1</text>
+      <rect class="c5" x="80" y="74" width="56" height="32"/><text class="v5" x="103" y="96">2</text>
+      <rect class="c5" x="140" y="74" width="56" height="32"/><text class="v5" x="163" y="96">3</text>
+      <rect class="c5" x="20" y="110" width="56" height="32"/><text class="v5" x="43" y="132">1</text>
+      <rect class="c5" x="80" y="110" width="56" height="32"/><text class="v5" x="103" y="132">2</text>
+      <rect class="c5" x="140" y="110" width="56" height="32"/><text class="v5" x="163" y="132">3</text>
+      <rect class="c5" x="20" y="146" width="56" height="32"/><text class="v5" x="43" y="168">1</text>
+      <rect class="c5" x="80" y="146" width="56" height="32"/><text class="v5" x="103" y="168">2</text>
+      <rect class="c5" x="140" y="146" width="56" height="32"/><text class="v5" x="163" y="168">3</text>
+
+      <text class="op" x="216" y="112">+</text>
+
+      <text class="l5" x="262" y="26">THE ROW &#183; (3,)</text>
+      <rect class="c5r" x="262" y="38" width="56" height="32"/><text class="v5" x="278" y="60">10</text>
+      <rect class="c5r" x="322" y="38" width="56" height="32"/><text class="v5" x="338" y="60">20</text>
+      <rect class="c5r" x="382" y="38" width="56" height="32"/><text class="v5" x="398" y="60">30</text>
+      <path class="st" d="M350 72 L350 100"/>
+      <path class="st" d="M350 72 L350 136"/>
+      <path class="st" d="M350 72 L350 172"/>
+      <text class="n5" x="262" y="206">the same row is used again</text>
+      <text class="n5" x="262" y="230">for every row of the table</text>
+      <text class="n5" x="262" y="262">nothing is actually copied &mdash;</text>
+      <text class="n5" x="262" y="286">it just reads the row four times</text>
+
+      <text class="op" x="460" y="112">=</text>
+
+      <text class="l5" x="506" y="26">RESULT &#183; (4, 3)</text>
+      <rect class="c5g" x="506" y="38" width="60" height="32"/><text class="v5" x="522" y="60">11</text>
+      <rect class="c5g" x="570" y="38" width="60" height="32"/><text class="v5" x="586" y="60">22</text>
+      <rect class="c5g" x="634" y="38" width="60" height="32"/><text class="v5" x="650" y="60">33</text>
+      <rect class="c5g" x="506" y="74" width="60" height="32"/><text class="v5" x="522" y="96">11</text>
+      <rect class="c5g" x="570" y="74" width="60" height="32"/><text class="v5" x="586" y="96">22</text>
+      <rect class="c5g" x="634" y="74" width="60" height="32"/><text class="v5" x="650" y="96">33</text>
+      <rect class="c5g" x="506" y="110" width="60" height="32"/><text class="v5" x="522" y="132">11</text>
+      <rect class="c5g" x="570" y="110" width="60" height="32"/><text class="v5" x="586" y="132">22</text>
+      <rect class="c5g" x="634" y="110" width="60" height="32"/><text class="v5" x="650" y="132">33</text>
+      <rect class="c5g" x="506" y="146" width="60" height="32"/><text class="v5" x="522" y="168">11</text>
+      <rect class="c5g" x="570" y="146" width="60" height="32"/><text class="v5" x="586" y="168">22</text>
+      <rect class="c5g" x="634" y="146" width="60" height="32"/><text class="v5" x="650" y="168">33</text>
+
+      <line x1="748" y1="16" x2="748" y2="288" stroke="#3f4a58" stroke-width="1"/>
+
+      <text class="l5" x="782" y="26">THE RULE &#183; LINE UP ON THE RIGHT</text>
+      <text class="sh5" x="782" y="76">(4, 3)</text>
+      <text class="sh5" x="782" y="110">(&#160;&#160;&#160;&#160;3)</text>
+      <line x1="782" y1="122" x2="952" y2="122" stroke="#7fc9a4" stroke-width="2"/>
+      <text class="sg" x="782" y="156">(4, 3)</text>
+      <text class="n5" x="782" y="196">Write both shapes down, lined</text>
+      <text class="n5" x="782" y="220">up at the right, never the left.</text>
+      <text class="n5" x="782" y="252">Then check each column. Both</text>
+      <text class="n5" x="782" y="276">equal, or one of them is a 1, or missing.</text>
+    </svg>
+    <figcaption>Line the two shapes up at the right-hand end and walk the columns. Each pair must be equal, or contain a 1, or be missing because one array has fewer dimensions &mdash; a missing one counts as a 1. If every pair passes, the result takes the bigger number from each. If any pair fails all three tests, it can&rsquo;t be done and you get an error.</figcaption>
+  </figure>
+
+<pre><code><span class="c"># works</span>
+(4, 3)     with  (3,)      <span class="c">-&gt; (4, 3)     row stretched down</span>
+(4, 3)     with  (4, 1)    <span class="c">-&gt; (4, 3)     column stretched across</span>
+(2, 3, 4)  with  (3, 4)    <span class="c">-&gt; (2, 3, 4)  one sheet used on every page</span>
+(4, 1)     with  (1, 3)    <span class="c">-&gt; (4, 3)     both stretch; a grid appears</span>
+
+<span class="c"># doesn't work</span>
+(4, 3)     with  (4,)      <span class="c">-&gt; error: 3 and 4 are neither equal nor 1</span>
+(4, 3)     with  (2, 3)    <span class="c">-&gt; error: 4 and 2 are neither equal nor 1</span></code></pre>
+
+  <h3>The one that catches everybody</h3>
+
+  <p>Look at the two failures. Adding a row of three to a four-by-three table works fine. Adding a <em>column</em> of four to the same table fails &mdash; even though four is precisely how many rows it has. That feels wrong, and here is why it isn&rsquo;t.</p>
+
+  <figure class="figure">
+    <span class="mini-label">Figure 08 &middot; Why a flat run of four fails, and how to fix it</span>
+    <svg viewBox="0 0 1120 220" role="img" aria-labelledby="fx-t fx-d">
+      <title id="fx-t">Shape four comma against shape four comma three</title>
+      <desc id="fx-d">Lined up on the right, a flat four lands under the three and fails. Reshaped to four by one, the four lands under the four and the one stretches to three.</desc>
+      <defs>
+        <style>
+          .s6{font:700 26px ui-monospace,monospace;fill:#eef2f7}
+          .h6{font:700 17px ui-monospace,monospace;letter-spacing:.09em}
+          .n6{font:16px Georgia,serif;fill:#bcc7d4}
+          .bad{fill:#3a2018;stroke:#e8967a;stroke-width:2.5}
+          .good{fill:#142b23;stroke:#7fc9a4;stroke-width:2.5}
+        </style>
+      </defs>
+
+      <rect class="bad" x="20" y="20" width="480" height="180"/>
+      <text class="h6" x="48" y="58" style="fill:#e8967a">FAILS</text>
+      <text class="s6" x="48" y="108">(4, 3)</text>
+      <text class="s6" x="48" y="146">(&#160;&#160;&#160;&#160;4)</text>
+      <line x1="48" y1="158" x2="230" y2="158" stroke="#e8967a" stroke-width="2"/>
+      <text class="n6" x="48" y="186" style="fill:#e8967a">3 against 4 &mdash; no good</text>
+      <text class="n6" x="276" y="106">A flat (4,) has no second slot</text>
+      <text class="n6" x="276" y="130">to sit in, so the 4 drifts into</text>
+      <text class="n6" x="276" y="154">the column position &mdash; under</text>
+      <text class="n6" x="276" y="178">the 3, not the other 4.</text>
+
+      <rect class="good" x="540" y="20" width="480" height="180"/>
+      <text class="h6" x="568" y="58" style="fill:#7fc9a4">WORKS</text>
+      <text class="s6" x="568" y="108">(4, 3)</text>
+      <text class="s6" x="568" y="146">(4, 1)</text>
+      <line x1="568" y1="158" x2="750" y2="158" stroke="#7fc9a4" stroke-width="2"/>
+      <text class="n6" x="568" y="186" style="fill:#7fc9a4">4 = 4, and the 1 stretches to 3</text>
+      <text class="n6" x="796" y="118">Adding the explicit 1 shoves</text>
+      <text class="n6" x="796" y="142">the 4 into the row slot, where</text>
+      <text class="n6" x="796" y="166">it belongs.</text>
+    </svg>
+    <figcaption>The same four numbers in both panels. The only difference is the shape. This single distinction &mdash; between a flat run and an explicit column &mdash; is behind most broadcasting errors you will ever see.</figcaption>
+  </figure>
+
+<pre><code>col = np.array([10, 20, 30, 40])   <span class="c"># shape (4,)</span>
+
+col.reshape(4, 1)                  <span class="c"># (4, 1) — spelt out</span>
+col.reshape(-1, 1)                 <span class="c"># (4, 1) — same, without counting</span>
+col[:, np.newaxis]                 <span class="c"># (4, 1) — the usual way people write it</span>
+
+table + col.reshape(-1, 1)         <span class="c"># works now</span></code></pre>
+
+  <p><span class="mono">np.newaxis</span> is just the word <span class="mono">None</span> wearing a name badge. Put it in the brackets and it inserts an empty dimension at that spot. <span class="mono">col[:, np.newaxis]</span> reads as: keep everything in the first direction, then add a second direction with one slot in it.</p>
+
+  <div class="annotation">
+    <p><strong>Reading the error.</strong> <span class="mono">ValueError: operands could not be broadcast together with shapes (4,3) (4,)</span></p>
+    <p style="margin-top:10px">&ldquo;Operands&rdquo; means the two things either side of the plus sign, listed in the order you wrote them. Line the shapes up on the right and find the column that fails. That is the whole diagnosis, and it takes about four seconds once you know to do it. Whenever a broadcast fails, print both shapes before you do anything else &mdash; it is either a real mismatch in your data or a flat <span class="mono">(n,)</span> that wanted to be <span class="mono">(n, 1)</span>, and only you can tell which.</p>
+  </div>
+
+  <h3>Picking between two arrays with <span class="mono" style="color:#dae3ee">np.where</span></h3>
+
+  <p>A mask tells you which positions pass. <span class="mono">np.where</span> uses a mask to take a value from one place where it&rsquo;s True and another place where it&rsquo;s False. It is an if/else applied to everything at once &mdash; and unlike masking, it keeps the shape. Nothing is dropped; every slot gets filled from one side or the other.</p>
+
+<pre><code>np.where(condition, use_this_if_true, use_this_if_false)
+
+sales = np.array([340, 890, 1120, 410, 700])
+
+np.where(sales &gt; 500, "good", "poor")
+<span class="c"># array(['poor', 'good', 'good', 'poor', 'good'])</span>
+
+np.where(sales &gt; 500, sales * 1.1, sales)
+<span class="c"># bump up the good days, leave the rest alone</span></code></pre>
+
+  <div class="grid">
+    <div class="span-6"><div class="card">
+      <span class="label">Masking</span>
+      <h3><span class="mono">arr[mask]</span> throws away</h3>
+      <p>The failures are dropped. You get back something smaller, usually a single row. Use it when you only want the ones that qualified.</p>
+    </div></div>
+    <div class="span-6"><div class="card">
+      <span class="label">Where</span>
+      <h3><span class="mono">np.where(mask, a, b)</span> swaps out</h3>
+      <p>The failures get replaced. You get back the same shape you started with. Use it to label, cap, or patch things in place.</p>
+    </div></div>
+  </div>
+
+  <h3>Getting several arrays into one place</h3>
+
+  <p>None of the above is any use until you have arrays to combine. Three functions cover nearly everything. Note the arrays go inside a list &mdash; each function takes one argument that happens to be a sequence, hence square brackets inside the round ones.</p>
+
+  <table>
+    <thead><tr><th style="width:32%">Call</th><th style="width:34%">What it does</th><th>What it needs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">np.vstack([a, b])</td><td>Stacks them as rows. The table gets taller.</td><td>The same number of columns.</td></tr>
+      <tr><td class="mono">np.hstack([a, b])</td><td>Puts them side by side. The table gets wider.</td><td>The same number of rows.</td></tr>
+      <tr><td class="mono">np.column_stack([a, b])</td><td>Turns each flat array into a column.</td><td>Nothing &mdash; it handles the reshaping for you.</td></tr>
+      <tr><td class="mono">np.concatenate([a, b], axis=0)</td><td>Joins along whichever direction you name.</td><td>A match everywhere except the direction being joined.</td></tr>
+    </tbody>
+  </table>
+
+<pre><code>costs  = np.array([12, 18, 9, 25])
+prices = np.array([20, 30, 15, 40])
+
+np.vstack([costs, prices])            <span class="c"># (2, 4) — two rows</span>
+np.column_stack([costs, prices])      <span class="c"># (4, 2) — two columns</span></code></pre>
+
+  <div class="warning">
+    <p><strong>Stacking is the moment the risk gets baked in.</strong> The second you stack two arrays together you have declared that their positions line up. Nothing has verified that. From then on, every calculation you do rests on it.</p>
+    <p>If the two sources could possibly be in different orders, sort them into a known order first, or do the join in pandas where the labels can be checked. It is ten minutes now against a wrong number in a report later.</p>
+  </div>
+</div></section>
+
+<section id="axis"><div class="shell">
+  <div class="section-head"><div class="section-no">06 / AXIS</div><div><h2>What on earth <em>is an axis?</em></h2><p class="lead">This word causes more confusion than anything else in NumPy, and mostly because you already know it from somewhere else. Let&rsquo;s deal with that first, before any rules.</p></div></div>
+
+  <h3>What you already think an axis is</h3>
+
+  <p>You learned axes at school. The x axis goes across the bottom. The y axis goes up the side. They are <em>directions on a picture</em>, they have letters, and there are two of them because a piece of paper is flat.</p>
+
+  <p>That is a perfectly good idea and it is not the one NumPy is using. Which is why the word keeps not quite fitting.</p>
+
+  <h3>What NumPy means by it</h3>
+
+  <p>In NumPy an axis is <strong>one of the layers in your shape</strong>. Not a direction on a graph &mdash; a level of the structure. And instead of letters they get numbers, because there might be five of them and we ran out of alphabet somewhere around the second one.</p>
+
+  <p>Go back to the book. A shape of <span class="mono">(2, 3, 4)</span> has three layers: pages, then rows, then columns. Those three layers <em>are</em> the three axes, and they are numbered in the order they appear in the shape.</p>
+
+  <div class="grid">
+    <div class="span-4"><div class="card">
+      <span class="label">Axis 0</span>
+      <h3>The pages</h3>
+      <p>The first number in the shape. The outermost layer &mdash; the biggest container.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">Axis 1</span>
+      <h3>The rows</h3>
+      <p>The second number. One layer further in.</p>
+    </div></div>
+    <div class="span-4"><div class="card">
+      <span class="label">Axis 2</span>
+      <h3>The columns</h3>
+      <p>The third number. The innermost layer &mdash; the actual run of values.</p>
+    </div></div>
+  </div>
+
+  <p style="margin-top:34px">So &ldquo;axis&rdquo; is just a numbered name for a layer. Axis 0 is always the outermost one. The last axis is always the innermost run of values. On an ordinary flat sheet, shape <span class="mono">(3, 4)</span>, there are only two: axis 0 is the rows and axis 1 is the columns. Same as reading the shape left to right, which you have been doing since section 02.</p>
+
+  <div class="annotation">
+    <p><strong>Why it matters at all:</strong> when you total something up, NumPy needs to know which layer to do the totalling through. Add up the whole thing? Add up each column separately? Each row? Each page? You answer that by naming a layer &mdash; and naming a layer means giving its number.</p>
+  </div>
+
+  <h3>Now the actual rule</h3>
+
+  <p>Here it is, and it is mechanical enough that you never have to think about it again:</p>
+
+  <div class="quote">The axis you name is the one that disappears.<small>Find its number in the shape, delete it, and what&rsquo;s left is your answer&rsquo;s shape</small></div>
+
+  <p style="margin-top:40px">A <span class="mono">(3, 4)</span> array summed along axis 0: delete the 3, you&rsquo;re left with <span class="mono">(4,)</span> &mdash; four numbers, one per column. Summed along axis 1: delete the 4, you&rsquo;re left with <span class="mono">(3,)</span> &mdash; three numbers, one per row. That&rsquo;s it. It works the same at any number of layers.</p>
+
+  <p class="scroll-hint">Scroll sideways for both directions &rarr;</p>
+  <figure class="figure wide">
+    <span class="mini-label">Figure 09 &middot; Delete the number, keep the rest</span>
+    <svg viewBox="0 0 1120 320" role="img" aria-labelledby="ax-t ax-d">
+      <title id="ax-t">Summing along axis zero and axis one</title>
+      <desc id="ax-d">A three by four array summed along axis zero gives four numbers, one per column. Summed along axis one it gives three numbers, one per row.</desc>
+      <defs>
+        <marker id="p7" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#b25a3e"/></marker>
+        <style>
+          .l7{font:700 15px ui-monospace,monospace;fill:#b25a3e;letter-spacing:.08em}
+          .lg7{font:700 15px ui-monospace,monospace;fill:#1f3a5c;letter-spacing:.08em}
+          .v7{font:700 16px ui-monospace,monospace;fill:#151d28}
+          .n7{font:16px Georgia,serif;fill:#5d6674}
+          .cd7{font:700 19px ui-monospace,monospace;fill:#1f3a5c}
+          .sh7{font:700 24px ui-monospace,monospace;fill:#151d28}
+          .b7{fill:#fffefa;stroke:#9fb3c8;stroke-width:1.3}
+          .r7{fill:#f3e0d7;stroke:#b25a3e;stroke-width:2}
+          .g7{fill:#dae3ee;stroke:#1f3a5c;stroke-width:2}
+          .a7{stroke:#b25a3e;stroke-width:2;fill:none;marker-end:url(#p7)}
+        </style>
+      </defs>
+
+      <text class="lg7" x="20" y="26">THE SHEET &#183; (3, 4)</text>
+      <rect class="b7" x="20" y="38" width="58" height="32"/><text class="v7" x="44" y="60">1</text>
+      <rect class="b7" x="82" y="38" width="58" height="32"/><text class="v7" x="106" y="60">2</text>
+      <rect class="b7" x="144" y="38" width="58" height="32"/><text class="v7" x="168" y="60">3</text>
+      <rect class="b7" x="206" y="38" width="58" height="32"/><text class="v7" x="230" y="60">4</text>
+      <rect class="b7" x="20" y="74" width="58" height="32"/><text class="v7" x="44" y="96">5</text>
+      <rect class="b7" x="82" y="74" width="58" height="32"/><text class="v7" x="106" y="96">6</text>
+      <rect class="b7" x="144" y="74" width="58" height="32"/><text class="v7" x="168" y="96">7</text>
+      <rect class="b7" x="206" y="74" width="58" height="32"/><text class="v7" x="230" y="96">8</text>
+      <rect class="b7" x="20" y="110" width="58" height="32"/><text class="v7" x="44" y="132">9</text>
+      <rect class="b7" x="82" y="110" width="58" height="32"/><text class="v7" x="102" y="132">10</text>
+      <rect class="b7" x="144" y="110" width="58" height="32"/><text class="v7" x="164" y="132">11</text>
+      <rect class="b7" x="206" y="110" width="58" height="32"/><text class="v7" x="226" y="132">12</text>
+
+      <path class="a7" d="M49 150 L49 180"/>
+      <path class="a7" d="M111 150 L111 180"/>
+      <path class="a7" d="M173 150 L173 180"/>
+      <path class="a7" d="M235 150 L235 180"/>
+
+      <text class="cd7" x="20" y="208">np.sum(arr, axis=0)</text>
+      <rect class="r7" x="20" y="222" width="58" height="32"/><text class="v7" x="40" y="244">15</text>
+      <rect class="r7" x="82" y="222" width="58" height="32"/><text class="v7" x="102" y="244">18</text>
+      <rect class="r7" x="144" y="222" width="58" height="32"/><text class="v7" x="164" y="244">21</text>
+      <rect class="r7" x="206" y="222" width="58" height="32"/><text class="v7" x="226" y="244">24</text>
+      <text class="n7" x="20" y="278">the rows are gone.</text>
+      <text class="n7" x="20" y="302">one total left per column</text>
+
+      <text class="sh7" x="320" y="70">(3, 4)</text>
+      <text class="n7" x="320" y="102">cross out the 3</text>
+      <text class="sh7" x="320" y="138" style="fill:#b25a3e">(4,)</text>
+
+      <text class="cd7" x="480" y="26">np.sum(arr, axis=1)</text>
+      <rect class="g7" x="480" y="42" width="72" height="32"/><text class="v7" x="502" y="64">10</text>
+      <rect class="g7" x="480" y="78" width="72" height="32"/><text class="v7" x="502" y="100">26</text>
+      <rect class="g7" x="480" y="114" width="72" height="32"/><text class="v7" x="502" y="136">42</text>
+      <text class="n7" x="480" y="176">the columns are gone.</text>
+      <text class="n7" x="480" y="200">one total left per row</text>
+      <text class="sh7" x="480" y="242">(3, 4)</text>
+      <text class="n7" x="480" y="274">cross out the 4</text>
+      <text class="sh7" x="480" y="310" style="fill:#1f3a5c">(3,)</text>
+
+      <line x1="740" y1="16" x2="740" y2="304" stroke="#cdc7b8" stroke-width="1"/>
+
+      <text class="l7" x="776" y="26">AND WITH A BOOK</text>
+      <text class="sh7" x="776" y="76">(2, 3, 4)</text>
+      <text class="cd7" x="776" y="124">axis=0  &#8594;  (3, 4)</text>
+      <text class="cd7" x="776" y="160">axis=1  &#8594;  (2, 4)</text>
+      <text class="cd7" x="776" y="196">axis=2  &#8594;  (2, 3)</text>
+      <text class="n7" x="776" y="240">Exactly the same move. Find</text>
+      <text class="n7" x="776" y="264">the number, cross it out, read</text>
+      <text class="n7" x="776" y="288">off what&#8217;s left.</text>
+    </svg>
+    <figcaption>You will often see this taught as &ldquo;axis 0 works down the rows&rdquo;. That is true and it is a rotten thing to memorise, because the word &ldquo;rows&rdquo; is describing the movement while the answer comes out one-per-column &mdash; so half of everyone remembers it backwards. Crossing a number out of a tuple has no such ambiguity, and it still works when there are four layers.</figcaption>
+  </figure>
+
+<pre><code>np.sum(arr, axis=0)      arr.min()        arr.argmin()
+np.mean(arr, axis=0)     arr.max()        arr.argmax()
+np.std(arr, axis=0)      arr.cumsum()     np.median(arr, axis=0)</code></pre>
+
+  <p>Most of these take an <span class="mono">axis</span> and most exist in two forms &mdash; <span class="mono">np.sum(arr)</span> and <span class="mono">arr.sum()</span> are the same thing. The <span class="mono">arg</span> pair is worth a mention: <span class="mono">argmax</span> tells you <em>where</em> the biggest value is, not what it is. You then normally use that position to look something up in another array &mdash; which drops you straight back into the positional-matching problem from section 05.</p>
+
+  <h3>Collapse, then put it back &mdash; the loop most analysis goes round</h3>
+
+  <p>Squash the array down one direction, then lay the result back over the original. Almost every normalisation, centring or share-of-total calculation is this shape, and it is where sections 05 and 06 shake hands.</p>
+
+  <div class="cycle">
+    <div class="step">
+      <h3>Squash it</h3>
+      <p>Average along one direction. A <span class="mono">(4, 3)</span> table averaged along <strong>axis 0</strong> becomes a <span class="mono">(3,)</span> row of column averages. The rows are gone.</p>
+    </div>
+    <div class="step">
+      <h3>Look at the shape</h3>
+      <p>A <span class="mono">(3,)</span> lines up neatly under a <span class="mono">(4, 3)</span>. A <span class="mono">(4,)</span> does not. <strong>Check now</strong>, not after the error message.</p>
+    </div>
+    <div class="step">
+      <h3>Lay it back over</h3>
+      <p>Subtract it, divide by it, compare against it. The small array stretches to cover the big one and every value gets measured against its own column.</p>
+    </div>
+  </div>
+
+<pre><code>readings.shape                      <span class="c"># (4, 3)</span>
+
+column_means = readings.mean(axis=0)
+column_means.shape                  <span class="c"># (3,)   the rows have gone</span>
+
+centred = readings - column_means   <span class="c"># (4, 3) with (3,) — lays straight back over</span></code></pre>
+
+  <p>Squash the other way and the return trip breaks, because you get a flat <span class="mono">(4,)</span> and lining up on the right puts the 4 under the 3. Same trap as figure 08.</p>
+
+<pre><code>row_means = readings.mean(axis=1)   <span class="c"># shape (4,)</span>
+
+readings - row_means                <span class="c"># ValueError — 3 against 4</span>
+readings - row_means.reshape(-1, 1) <span class="c"># works</span></code></pre>
+
+  <div class="annotation">
+    <p><strong>Or just ask for the layer to be kept.</strong> <span class="mono">readings.mean(axis=1, keepdims=True)</span> gives you <span class="mono">(4, 1)</span> instead of <span class="mono">(4,)</span> &mdash; it leaves a 1 where the squashing happened, so the result lays straight back over the original with no fiddling. That is the entire purpose of <span class="mono">keepdims</span> and it is why it exists.</p>
+  </div>
+</div></section>
+
+<section id="maths"><div class="shell">
+  <div class="section-head"><div class="section-no">07 / THE MATHS</div><div><h2>What the functions <em>are for</em></h2><p class="lead">These all apply to every value and keep the shape. This is not a maths course &mdash; it&rsquo;s enough to know why you&rsquo;d reach for each one and what it does to a pile of numbers.</p></div></div>
+
+  <h3>Logarithms: squashing the big end</h3>
+
+  <p>A logarithm answers one question: <em>what power do I raise this number to, to get that number?</em> In base ten, the log of 1,000 is 3, because ten times ten times ten is a thousand. That is genuinely all it is.</p>
+
+  <p>The useful bit for you is what it does to a set of numbers. <strong>A log squashes the big end of the range and spreads out the small end.</strong></p>
+
+  <figure class="figure">
+    <span class="mini-label">Figure 10 &middot; The same five numbers, before and after</span>
+    <svg viewBox="0 0 1120 270" role="img" aria-labelledby="lg-t lg-d">
+      <title id="lg-t">Raw values against their base-ten logarithms</title>
+      <desc id="lg-d">Five values from one to ten thousand crowd at the left of an ordinary scale. Their base-ten logarithms are evenly spaced from zero to four.</desc>
+      <defs>
+        <style>
+          .l8{font:700 15px ui-monospace,monospace;letter-spacing:.08em}
+          .n8{font:16px Georgia,serif;fill:#5d6674}
+          .v8{font:700 15px ui-monospace,monospace;fill:#151d28}
+          .ax8{stroke:#5d6674;stroke-width:1.5}
+          .tick{stroke:#cdc7b8;stroke-width:1}
+          .dotr{fill:#b25a3e;stroke:#fffefa;stroke-width:2}
+          .dotg{fill:#1f3a5c;stroke:#fffefa;stroke-width:2}
+        </style>
+      </defs>
+
+      <text class="l8" x="20" y="26" style="fill:#b25a3e">AS THEY COME &#183; ORDINARY SCALE</text>
+      <line class="ax8" x1="20" y1="100" x2="1000" y2="100"/>
+      <circle class="dotr" cx="20" cy="100" r="9"/>
+      <circle class="dotr" cx="21" cy="100" r="9"/>
+      <circle class="dotr" cx="30" cy="100" r="9"/>
+      <circle class="dotr" cx="118" cy="100" r="9"/>
+      <circle class="dotr" cx="1000" cy="100" r="9"/>
+      <text class="v8" x="14" y="132">1 &#183; 10 &#183; 100</text>
+      <text class="v8" x="100" y="132">1,000</text>
+      <text class="v8" x="940" y="132">10,000</text>
+      <text class="n8" x="20" y="166">Four of the five are piled up against the left edge, effectively on top of each other.</text>
+      <text class="n8" x="20" y="190">One big value has flattened everything else into a smudge.</text>
+
+      <text class="l8" x="20" y="228" style="fill:#1f3a5c">AFTER np.log10 &#183; EVENLY SPREAD</text>
+      <line class="ax8" x1="20" y1="256" x2="1000" y2="256"/>
+      <line class="tick" x1="20" y1="248" x2="20" y2="264"/>
+      <line class="tick" x1="265" y1="248" x2="265" y2="264"/>
+      <line class="tick" x1="510" y1="248" x2="510" y2="264"/>
+      <line class="tick" x1="755" y1="248" x2="755" y2="264"/>
+      <line class="tick" x1="1000" y1="248" x2="1000" y2="264"/>
+      <circle class="dotg" cx="20" cy="256" r="9"/>
+      <circle class="dotg" cx="265" cy="256" r="9"/>
+      <circle class="dotg" cx="510" cy="256" r="9"/>
+      <circle class="dotg" cx="755" cy="256" r="9"/>
+      <circle class="dotg" cx="1000" cy="256" r="9"/>
+      <text class="v8" x="14" y="240">0</text>
+      <text class="v8" x="259" y="240">1</text>
+      <text class="v8" x="504" y="240">2</text>
+      <text class="v8" x="749" y="240">3</text>
+      <text class="v8" x="986" y="240">4</text>
+    </svg>
+    <figcaption>Five values spanning a factor of ten thousand become five even steps. When your data is lopsided &mdash; incomes, city sizes, page views, order values, where a few enormous numbers squash everything else flat &mdash; taking logs makes the small end visible again. This is the standard first move on lopsided data, and it is why &ldquo;log scale&rdquo; turns up so often on a chart.</figcaption>
+  </figure>
+
+  <table>
+    <thead><tr><th style="width:18%">Call</th><th style="width:24%">Base</th><th>Reach for it when</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">np.log10</td><td>10</td><td>A human has to read it. Each step of 1 means ten times bigger. Best for charts.</td></tr>
+      <tr><td class="mono">np.log2</td><td>2</td><td>Doublings matter. Common in computing, and anything measured in halvings.</td></tr>
+      <tr><td class="mono">np.log</td><td><em>e</em>, about 2.718</td><td>The default, and the one every statistics formula assumes. Growth and decay.</td></tr>
+      <tr><td class="mono">np.exp</td><td>&mdash;</td><td>The opposite of <span class="mono">np.log</span>. Undoes a natural log, or models compounding growth.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="annotation">
+    <p><em>e</em> is not a NumPy thing and it is not a fallback for anything. It is a fixed number, roughly 2.71828, that shows up whenever something grows in proportion to how much of it there already is &mdash; compound interest, populations, radioactive decay. Logs to base <em>e</em> get called natural logs for that reason, which is a slightly grand name for a very ordinary constant.</p>
+  </div>
+
+  <div class="warning">
+    <p><strong>Two things a log will not do for you.</strong> The log of zero is undefined &mdash; you get <span class="mono">-inf</span> and a warning. The log of a negative number gives you <span class="mono">nan</span>.</p>
+    <p>Since count data is usually full of zeros, the standard dodge is to shift everything up by one first: <span class="mono">np.log(values + 1)</span>. NumPy gives you <span class="mono">np.log1p()</span> which does exactly that, more accurately.</p>
+  </div>
+
+  <div class="history">
+    <span class="label">Where this comes from</span>
+    <h3>Napier&rsquo;s twenty years, 1614</h3>
+    <p>John Napier was a Scottish laird at Merchiston Tower with an interest in mathematics and a much larger one in theology. He spent about twenty years building a table. The problem he was attacking was brutally practical: astronomers and navigators spent most of their working lives multiplying long strings of digits by hand, and every one of those was a chance to make a mistake nobody would notice until a ship failed to turn up.</p>
+    <p>His idea was that if you write down the exponents, multiplication turns into addition. Look up two numbers, add them, look the answer back up. Two lookups and a sum instead of a page of long multiplication. When the tables reached Kepler his workload dropped so far that the Rudolphine Tables &mdash; the planetary calculations behind his laws of motion &mdash; became finishable at all. Laplace later said logarithms had doubled the lifespan of the astronomer, which is only a mild exaggeration.</p>
+    <p>The slide rule turned up within a decade and stayed the working engineer&rsquo;s tool for the next three hundred and fifty years, until pocket calculators killed it off. That logs are still on your chart axes is a happy accident &mdash; something invented to make arithmetic smaller turned out to make lopsided data smaller too.</p>
+  </div>
+
+  <h3>Two kinds of random, and why they&rsquo;re different</h3>
+
+  <p>A distribution is just a description of which values are likely and which are rare. Two of them matter for everyday work, and the difference between the two functions is not a detail you can skip.</p>
+
+  <figure class="figure">
+    <span class="mini-label">Figure 11 &middot; Flat, against clustered</span>
+    <svg viewBox="0 0 1120 250" role="img" aria-labelledby="di-t di-d">
+      <title id="di-t">Uniform and normal distributions compared</title>
+      <desc id="di-d">A uniform distribution is a flat block of equal-height bars. A normal distribution is a bell shape, tall in the middle and thin at both edges.</desc>
+      <defs>
+        <style>
+          .l9{font:700 15px ui-monospace,monospace;letter-spacing:.08em}
+          .n9{font:16px Georgia,serif;fill:#5d6674}
+          .t9{font:700 20px Georgia,serif;fill:#151d28}
+          .ba{fill:#dcae76;stroke:#c88a42;stroke-width:1.2}
+          .bb{fill:#dae3ee;stroke:#1f3a5c;stroke-width:1.2}
+          .ax9{stroke:#5d6674;stroke-width:1.5}
+        </style>
+      </defs>
+
+      <text class="l9" x="20" y="26" style="fill:#c88a42">np.random.rand</text>
+      <text class="t9" x="20" y="56">Uniform &mdash; flat as a pancake</text>
+      <rect class="ba" x="20" y="84" width="34" height="80"/>
+      <rect class="ba" x="58" y="84" width="34" height="80"/>
+      <rect class="ba" x="96" y="84" width="34" height="80"/>
+      <rect class="ba" x="134" y="84" width="34" height="80"/>
+      <rect class="ba" x="172" y="84" width="34" height="80"/>
+      <rect class="ba" x="210" y="84" width="34" height="80"/>
+      <rect class="ba" x="248" y="84" width="34" height="80"/>
+      <rect class="ba" x="286" y="84" width="34" height="80"/>
+      <rect class="ba" x="324" y="84" width="34" height="80"/>
+      <rect class="ba" x="362" y="84" width="34" height="80"/>
+      <line class="ax9" x1="20" y1="164" x2="396" y2="164"/>
+      <text class="n9" x="20" y="196">Every value between 0 and 1 is equally likely.</text>
+      <text class="n9" x="20" y="220">No middle, no edges. Use it for shuffling, sampling,</text>
+      <text class="n9" x="20" y="244">and test data where you want even coverage.</text>
+
+      <line x1="480" y1="16" x2="480" y2="234" stroke="#cdc7b8" stroke-width="1"/>
+
+      <text class="l9" x="540" y="26" style="fill:#1f3a5c">np.random.randn</text>
+      <text class="t9" x="540" y="56">Normal &mdash; piled up in the middle</text>
+      <rect class="bb" x="540" y="154" width="34" height="10"/>
+      <rect class="bb" x="578" y="138" width="34" height="26"/>
+      <rect class="bb" x="616" y="112" width="34" height="52"/>
+      <rect class="bb" x="654" y="78" width="34" height="86"/>
+      <rect class="bb" x="692" y="64" width="34" height="100"/>
+      <rect class="bb" x="730" y="64" width="34" height="100"/>
+      <rect class="bb" x="768" y="78" width="34" height="86"/>
+      <rect class="bb" x="806" y="112" width="34" height="52"/>
+      <rect class="bb" x="844" y="138" width="34" height="26"/>
+      <rect class="bb" x="882" y="154" width="34" height="10"/>
+      <line class="ax9" x1="540" y1="164" x2="916" y2="164"/>
+      <text class="n9" x="540" y="196">Values bunch around the middle and thin out at</text>
+      <text class="n9" x="540" y="220">the edges. Average 0, spread of 1. Use it when</text>
+      <text class="n9" x="540" y="244">simulating something that varies around a typical value.</text>
+    </svg>
+    <figcaption>&ldquo;Standard normal&rdquo; means the bell curve pinned at an average of 0 and a spread of 1. Roughly 68 per cent of values land within one step of the middle, and about 95 per cent within two &mdash; which is where the phrase &ldquo;two standard deviations out&rdquo; comes from when somebody calls something an outlier.</figcaption>
+  </figure>
+
+<pre><code>np.random.rand(3, 4)                  <span class="c"># flat, between 0 and 1</span>
+np.random.uniform(10, 50, size=5)     <span class="c"># flat, bounds you choose</span>
+
+np.random.randn(100)                  <span class="c"># bell curve, average 0, spread 1</span>
+np.random.normal(70, 5, size=100)     <span class="c"># bell curve, middle and spread you choose</span>
+
+np.random.seed(42)                    <span class="c"># same "random" numbers every run</span></code></pre>
+
+  <p><span class="mono">np.random.seed()</span> pins down where the generator starts, so you get the same values every time you run it. It controls nothing else &mdash; not the range, not the size. Set it when somebody else needs to reproduce your results.</p>
+
+  <h3>Average and middle, and when they part company</h3>
+
+  <p>The mean adds it all up and divides. The median sorts everything and takes the one in the middle. On tidy symmetrical data they agree. On lopsided data they can end up in different postcodes, because one enormous value drags the mean hard and barely moves the median.</p>
+
+<pre><code>salaries = np.array([24000, 26000, 27000, 29000, 310000])
+
+np.mean(salaries)     <span class="c"># 83200  — describes nobody in this list</span>
+np.median(salaries)   <span class="c"># 27000  — describes four of the five</span></code></pre>
+
+  <p>The gap between them is itself a useful signal. If the mean and the median are miles apart, your data is lopsided &mdash; which is also your hint that a log might be worth taking before you chart it. <span class="mono">np.std()</span> gives the standard deviation, the typical distance from the average, and it inherits the mean&rsquo;s weakness for being bullied by extremes.</p>
+
+  <h3><span class="mono">nan</span>: the value that isn&rsquo;t one</h3>
+
+  <p><span class="mono">nan</span> means &ldquo;not a number&rdquo;. You get one when a sum has no sensible answer &mdash; the square root of a negative, zero divided by zero &mdash; and wherever data is simply missing.</p>
+
+<pre><code>np.sqrt(np.array([4, -9, 16]))    <span class="c"># array([ 2., nan,  4.]) and a warning</span></code></pre>
+
+  <div class="strength">
+    <div class="a">
+      <span class="label">01</span>
+      <h3>It spreads</h3>
+      <p>One <span class="mono">nan</span> anywhere makes <span class="mono">np.sum()</span> and <span class="mono">np.mean()</span> return <span class="mono">nan</span> for the lot. Use <span class="mono">np.nansum()</span>, <span class="mono">np.nanmean()</span>, <span class="mono">np.nanmax()</span>.</p>
+    </div>
+    <div class="b">
+      <span class="label">02</span>
+      <h3>It fails every test</h3>
+      <p><span class="mono">nan == nan</span> comes back <span class="mono">False</span>. You cannot find missing values by comparing. Use <span class="mono">np.isnan(arr)</span>, which hands you a mask.</p>
+    </div>
+    <div class="c">
+      <span class="label">03</span>
+      <h3>It&rsquo;s a float</h3>
+      <p>An integer array has to become a float array to carry one. A very common reason for a dtype changing when you didn&rsquo;t ask it to.</p>
+    </div>
+    <div class="d">
+      <span class="label">04</span>
+      <h3>All of that is deliberate</h3>
+      <p>Every annoying thing about it was designed in on purpose, forty years ago, by people who had thought about it a great deal.</p>
+    </div>
+  </div>
+
+  <div class="history">
+    <span class="label">Where this comes from</span>
+    <h3>IEEE 754, 1985</h3>
+    <p>Before the mid-eighties every manufacturer did decimals their own way. The same program on two different machines could give two different answers, and a calculation that overflowed might crash, wrap round to a negative, or quietly return nonsense, depending entirely on whose hardware you happened to be sitting at. Numbers were not portable in any useful sense.</p>
+    <p>A committee got together in 1977, with the mathematician William Kahan doing much of the design, and after eight years of arguing produced IEEE 754. It fixed how a decimal number is laid out in bits, and set aside particular patterns for things that are not ordinary numbers: infinity, negative infinity, and Not a Number.</p>
+    <p>Kahan&rsquo;s argument for <span class="mono">nan</span> was that one failed sum should not kill a long calculation &mdash; but it must never be mistakable for a real answer either. So it had to spread, contaminating everything downstream until somebody dealt with it properly. Its refusal to equal itself comes from the same reasoning: it fails every comparison, so no test can accidentally wave it through. Everything irritating about <span class="mono">nan</span> is the safety feature working. And <span class="mono">float64</span> is that standard&rsquo;s double-precision format, unchanged since 1985.</p>
+  </div>
+</div></section>
+
+<section id="sheet"><div class="shell">
+  <div class="section-head"><div class="section-no">08 / CHEAT SHEET</div><div><h2>The bit you&rsquo;ll <em>come back for</em></h2><p class="lead">Everything above with the explanation taken out. Nothing new here &mdash; if something looks unfamiliar, it has a section number next to it somewhere further up.</p></div></div>
+
+  <h3>Reading the punctuation</h3>
+  <table>
+    <thead><tr><th style="width:30%">What you see</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">np.function(arr)</td><td>A function belonging to NumPy. The array goes in as an ingredient.</td></tr>
+      <tr><td class="mono">arr.method(...)</td><td>Something the array itself can do. Round brackets mean you&rsquo;re asking it to do it.</td></tr>
+      <tr><td class="mono">arr.attribute</td><td>A fact about the array. <strong>No brackets.</strong> Adding them gets you nonsense.</td></tr>
+      <tr><td class="mono">arr[...]</td><td>Square brackets: an address, a slice, or a mask.</td></tr>
+      <tr><td class="mono">np.random.function(...)</td><td>Two dots because <span class="mono">random</span> is a box inside NumPy, and the function is inside that.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid">
+    <div class="span-6">
+      <h3>Making arrays</h3>
+      <table>
+        <thead><tr><th style="width:50%">Call</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">np.array(source_list)</td><td>From a list. Mixed ints and floats all become floats.</td></tr>
+          <tr><td class="mono">np.arange(start, stop, step)</td><td><strong>Stop excluded.</strong> You pick the step, not the count.</td></tr>
+          <tr><td class="mono">np.linspace(start, stop, num)</td><td><strong>Stop included.</strong> You pick the count, not the step.</td></tr>
+          <tr><td class="mono">np.zeros(shape=(r, c))</td><td>Floats by default. <span class="mono">dtype=int</span> for whole numbers.</td></tr>
+          <tr><td class="mono">np.ones(shape=(r, c))</td><td>Multiply it to fill an array with any value.</td></tr>
+          <tr><td class="mono">np.full(shape, value)</td><td>Fills with whatever you like.</td></tr>
+          <tr><td class="mono">np.eye(n)</td><td>Ones down the diagonal, zeros elsewhere.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="span-6">
+      <h3>Random values</h3>
+      <table>
+        <thead><tr><th style="width:50%">Call</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">np.random.rand(r, c)</td><td>Flat, 0 to 1. Shape as loose numbers, not a tuple.</td></tr>
+          <tr><td class="mono">np.random.randn(n)</td><td>Bell curve, average 0, spread 1.</td></tr>
+          <tr><td class="mono">np.random.uniform(low, high, size)</td><td>Always floats, however round the bounds look.</td></tr>
+          <tr><td class="mono">np.random.normal(mean, sd, size)</td><td>Bell curve, your middle and spread.</td></tr>
+          <tr><td class="mono">np.random.randint(low, high, size)</td><td><strong>Low included, high excluded.</strong></td></tr>
+          <tr><td class="mono">np.random.choice(options, size)</td><td>Picks from what you give it. The only way to get random text.</td></tr>
+          <tr><td class="mono">np.random.seed(42)</td><td>Same numbers every run. Sets nothing else.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Looking at it, and changing its shape</h3>
+  <div class="code-pair">
+    <div>
+      <div class="cap"><span class="label">Ask it things</span><strong>No brackets on any of these</strong></div>
+<pre><code>arr.shape     <span class="c"># how it's built</span>
+arr.ndim      <span class="c"># how many layers</span>
+arr.size      <span class="c"># how many values</span>
+arr.dtype     <span class="c"># what kind of values</span>
+arr.T         <span class="c"># flip rows and columns</span></code></pre>
+    </div>
+    <div>
+      <div class="cap"><span class="label">Rearrange it</span><strong>Mind which ones copy</strong></div>
+<pre><code>arr.reshape(r, c)     <span class="c"># refold; count must match</span>
+arr.reshape(-1, 1)    <span class="c"># flat run -> column</span>
+arr[:, np.newaxis]    <span class="c"># same thing, usual spelling</span>
+arr.flatten()         <span class="c"># flat, always a copy</span>
+arr.copy()            <span class="c"># the real backup</span></code></pre>
+    </div>
+  </div>
+
+  <h3>Getting values out</h3>
+<pre><code>arr[2, 3]                       <span class="c"># one value</span>
+arr[:, 0]                       <span class="c"># every row, first column</span>
+arr[1:3, -2:]                   <span class="c"># rows 1-2, last two columns</span>
+arr[1]        vs  arr[1:2]      <span class="c"># a number drops a layer, a slice keeps it</span>
+
+arr[arr &gt; 4]                    <span class="c"># mask: keeps what passed, comes back flat</span>
+arr[(arr &gt; 4) &amp; (arr &lt;= 17)]    <span class="c"># every comparison needs its own brackets</span>
+other[arr &gt; 4]                  <span class="c"># mask from one array, values from another</span>
+np.where(arr &gt; 4, a, b)         <span class="c"># swaps instead of dropping; shape survives</span></code></pre>
+
+  <h3>Putting arrays together</h3>
+  <table>
+    <thead><tr><th style="width:36%">Call</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">a + b, a * b, a &gt; b</td><td>Value by value, matched <strong>by position only</strong>. There are no labels.</td></tr>
+      <tr><td class="mono">np.vstack([a, b])</td><td>Stack as rows. Needs the same number of columns.</td></tr>
+      <tr><td class="mono">np.hstack([a, b])</td><td>Side by side. Needs the same number of rows.</td></tr>
+      <tr><td class="mono">np.column_stack([a, b])</td><td>Two flat arrays become two columns. No reshaping needed.</td></tr>
+      <tr><td class="mono">np.concatenate([a, b], axis=0)</td><td>Join along a direction you name.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid">
+    <div class="span-6"><div class="card">
+      <span class="label">Broadcasting check</span>
+      <h3>Three steps, every time</h3>
+      <p><strong>1.</strong> Write both shapes down, lined up on the <em>right</em>.</p>
+      <p><strong>2.</strong> Each column must match, contain a 1, or be missing.</p>
+      <p><strong>3.</strong> The answer takes the bigger number from each column.</p>
+      <p style="margin-top:12px">A flat <span class="mono">(n,)</span> counts as a row. If you meant a column, make it <span class="mono">(n, 1)</span>.</p>
+    </div></div>
+    <div class="span-6"><div class="card">
+      <span class="label">Axis check</span>
+      <h3>Cross it out and look</h3>
+      <p>An axis is a <strong>layer</strong>, numbered from the outside in. Axis 0 is the outermost. The last axis is the run of values.</p>
+      <p style="margin-top:12px">The one you name is the one that <strong>disappears</strong>. Cross its number out of the shape and read off what&rsquo;s left. Add <span class="mono">keepdims=True</span> to leave a 1 there instead.</p>
+    </div></div>
+  </div>
+
+  <h3>Maths and totalling up</h3>
+<pre><code>np.sqrt(arr)   np.abs(arr)    np.exp(arr)
+np.log(arr)    np.log10(arr)  np.log2(arr)   np.log1p(arr)
+
+np.sum(arr, axis=0)     np.mean(arr, axis=1)    np.median(arr)
+np.std(arr)             np.min(arr)             np.max(arr)
+arr.argmin()            arr.argmax()            arr.cumsum()
+
+np.nansum(arr)   np.nanmean(arr)   np.isnan(arr)</code></pre>
+
+  <h3>Keywords that keep turning up</h3>
+  <table>
+    <thead><tr><th style="width:22%">Keyword</th><th>What it controls</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">axis=</td><td>Which layer to work through, and therefore which one vanishes.</td></tr>
+      <tr><td class="mono">shape=</td><td>How to build it, as a tuple.</td></tr>
+      <tr><td class="mono">size=</td><td>How much to make. A number or a tuple. Not a type.</td></tr>
+      <tr><td class="mono">dtype=</td><td>Forces a type instead of letting NumPy pick.</td></tr>
+      <tr><td class="mono">low= / high=</td><td>Bounds. Low in, high out, on the whole-number generators.</td></tr>
+      <tr><td class="mono">num=</td><td>How many &mdash; <span class="mono">linspace</span> only.</td></tr>
+      <tr><td class="mono">step=</td><td>The gap between values &mdash; <span class="mono">arange</span> only.</td></tr>
+      <tr><td class="mono">keepdims=</td><td>Leaves a 1 where the squashing happened.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>When it goes wrong</h3>
+  <table>
+    <thead><tr><th style="width:40%">What you see</th><th>What it usually means</th></tr></thead>
+    <tbody>
+      <tr><td>&ldquo;operands could not be broadcast together&rdquo;</td><td>Line the shapes up on the right and find the column that fails. Usually an <span class="mono">(n,)</span> that wanted to be <span class="mono">(n, 1)</span>.</td></tr>
+      <tr><td>&ldquo;truth value of an array&hellip; is ambiguous&rdquo;</td><td>You wrote <span class="mono">and</span> or <span class="mono">or</span> where you needed <span class="mono">&amp;</span> or <span class="mono">|</span>.</td></tr>
+      <tr><td>&ldquo;cannot reshape array of size 30 into shape (4,8)&rdquo;</td><td>Check <span class="mono">arr.size</span>. The totals have to match exactly.</td></tr>
+      <tr><td>Everything came out <span class="mono">nan</span></td><td>One got in and spread. Find it with <span class="mono">np.isnan()</span>, or dodge it with the <span class="mono">nan</span> versions.</td></tr>
+      <tr><td>Your original array changed by itself</td><td>You wrote through a view. Take <span class="mono">.copy()</span> before changing anything.</td></tr>
+      <tr><td>Whole numbers turned into decimals</td><td>A float or a <span class="mono">nan</span> got in and dragged the whole array with it.</td></tr>
+      <tr><td>More brackets than you were expecting</td><td>A slice kept a layer where a plain number would have removed it.</td></tr>
+      <tr><td><strong>It looks right but the number is wrong</strong></td><td><strong>Two arrays in different orders.</strong> NumPy matches by position and will never warn you about this. Nothing else in this table is silent.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="quote">Print both shapes before you combine anything. That catches every mistake NumPy is willing to shout about. The one it won&rsquo;t &mdash; two arrays in different orders &mdash; is yours to catch.<small>The only rule worth memorising</small></div>
+</div></section>
+
+</main>
+
+<footer><div class="shell">
+  <div class="footer-grid">
+    <a class="tidy" href="https://github.com/TidyWeb/" target="_blank" rel="noopener"><img src="assets/tidyweb_logo.png" alt="TidyWeb logo" width="84" height="84"><span>TidyWeb</span></a>
+    <div>
+      <p><strong>NumPy Guide &mdash; boxes, sheets and addresses.</strong> Written to replace course material that assumed the ideas rather than explaining them.</p>
+      <p>Figures 01&ndash;11 are drawn to show how things are built, not to plot real data. The history panels are here because each one explains something you&rsquo;ll actually run into.</p>
+    </div>
+  </div>
+</div></footer>
+
+</body>
+</html>
