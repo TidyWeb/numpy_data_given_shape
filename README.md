@@ -1,6 +1,6 @@
 # NumPy Guide — Data, Given Shape
 
-## [🌐 Open the live site: https://tidyweb.github.io/numpy_data_given_shape/ ↗](https://tidyweb.github.io/numpy_data_given_shape/)
+### [Visit the live site ↗](https://tidyweb.github.io/numpy_data_given_shape/)
 
 
 An illustrated guide to NumPy for people learning Python for data analysis.
